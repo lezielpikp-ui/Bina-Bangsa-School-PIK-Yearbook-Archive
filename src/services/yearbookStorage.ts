@@ -7,7 +7,7 @@ import { Yearbook } from '../types/yearbook';
 import { generateCoverSvgDataUrl } from '../utils/coverGenerator';
 import { deletePdfFile } from './pdfStore';
 
-const STORAGE_KEY = 'bbs_pik_yearbook_gallery_records_v3';
+const STORAGE_KEY = 'bbs_pik_yearbook_gallery_records_v4';
 
 /**
  * Pre-populated realistic initial yearbook collection for
@@ -305,11 +305,24 @@ export function saveYearbook(yearbook: Yearbook): Yearbook[] {
   }
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+    // Sanitize to prevent LocalStorage quota overflow (PDF binaries are saved in IndexedDB)
+    const sanitizedList = updatedList.map((item) => {
+      if (item.fileUrl && item.fileUrl.startsWith('data:application/pdf') && item.fileUrl.length > 50000) {
+        return { ...item, fileUrl: '' };
+      }
+      return item;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitizedList));
     window.dispatchEvent(new CustomEvent('yearbooks_updated'));
   } catch (err) {
-    console.error('Storage quota exceeded or write failed:', err);
-    throw new Error('Storage write failed. Note that large PDFs in base64 can exceed browser localStorage limits; in production, connect AWS S3 or Firebase Storage.');
+    console.error('Storage write error, attempting stripped fallback:', err);
+    try {
+      const strippedList = updatedList.map((item) => ({ ...item, fileUrl: '' }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(strippedList));
+      window.dispatchEvent(new CustomEvent('yearbooks_updated'));
+    } catch {
+      throw new Error('Storage write failed. Please ensure browser storage quota is available.');
+    }
   }
 
   return updatedList;

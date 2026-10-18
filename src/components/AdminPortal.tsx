@@ -30,7 +30,6 @@ import {
 import { AdminUser, Yearbook } from '../types/yearbook';
 import {
   authenticateAdmin,
-  DEFAULT_ADMIN_CONFIG,
 } from '../services/authService';
 import { AdminYearbookModal } from './AdminYearbookModal';
 import { AdminDeleteConfirmModal } from './AdminDeleteConfirmModal';
@@ -71,13 +70,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [yearbookToEdit, setYearbookToEdit] = useState<Yearbook | null>(null);
   const [yearbookToDelete, setYearbookToDelete] = useState<Yearbook | null>(null);
-
-  // Quick autofill for demo test
-  const handleAutofillCredentials = () => {
-    setEmail(DEFAULT_ADMIN_CONFIG.email);
-    setPassword(DEFAULT_ADMIN_CONFIG.password);
-    setLoginError(null);
-  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,37 +147,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </p>
         </div>
 
-        {/* Demo Helper Banner with One-Click Fill */}
-        <div className="mb-6 p-3.5 rounded-2xl bg-[#030d1d] border border-cyan-800/80 text-xs text-cyan-100 space-y-2">
-          <div className="flex items-center justify-between text-yellow-300 font-bold">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-cyan-400" />
-              BBS PIK Admin Credentials
-            </span>
-            <span className="text-[10px] font-mono text-cyan-300">Authorized Domain</span>
-          </div>
-          <p className="text-[11px] text-cyan-200/70">
-            Official admin account for Bina Bangsa School Pantai Indah Kapuk:
-          </p>
-          <div className="bg-[#071630] p-2.5 rounded-xl border border-cyan-700/60 text-[11px] font-mono space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-cyan-300/80 font-sans text-[10px]">Email:</span>
-              <span className="text-white font-semibold">{DEFAULT_ADMIN_CONFIG.email}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-cyan-300/80 font-sans text-[10px]">Password:</span>
-              <span className="text-yellow-300 font-bold tracking-wide">{DEFAULT_ADMIN_CONFIG.password}</span>
-            </div>
-            <div className="pt-1.5 border-t border-cyan-800/60 flex justify-end">
-              <button
-                type="button"
-                onClick={handleAutofillCredentials}
-                className="text-yellow-400 hover:text-yellow-300 font-bold underline font-sans cursor-pointer text-xs"
-              >
-                Auto-fill Login Credentials
-              </button>
-            </div>
-          </div>
+        {/* Secure Archival Login Notice */}
+        <div className="mb-6 p-3 rounded-xl bg-[#030d1d] border border-cyan-900/80 text-xs text-cyan-200/80 flex items-center gap-2.5">
+          <Lock className="w-4 h-4 text-cyan-400 shrink-0" />
+          <span>Please enter your authorized administrative credentials to access archive management tools.</span>
         </div>
 
         {/* Error notification */}
@@ -209,7 +174,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin.pikp@binabangsaschool.com"
+                placeholder="admin@binabangsaschool.com"
                 className="w-full pl-9 pr-3 py-2.5 bg-[#030d1d] border border-cyan-800 rounded-xl text-sm text-white placeholder-cyan-200/40 focus:outline-none focus:border-cyan-400"
               />
             </div>

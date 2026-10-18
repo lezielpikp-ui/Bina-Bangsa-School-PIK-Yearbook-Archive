@@ -80,11 +80,12 @@ export function generateCoverSvgDataUrl(
   const safeYear = escapeXml(year);
   const safeTitle = escapeXml(title);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" width="100%" height="100%">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="100%" height="100%">
     <defs>
       <linearGradient id="bbsBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="${scheme.bg1}" />
-        <stop offset="100%" stop-color="${scheme.bg2}" />
+        <stop offset="60%" stop-color="${scheme.bg2}" />
+        <stop offset="100%" stop-color="#020712" />
       </linearGradient>
       <linearGradient id="bbsFoilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
@@ -93,126 +94,136 @@ export function generateCoverSvgDataUrl(
         <stop offset="100%" stop-color="#ffffff" stop-opacity="0.85" />
       </linearGradient>
       <linearGradient id="bbsSpineShadow" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="#000000" stop-opacity="0.65" />
-        <stop offset="4%" stop-color="#ffffff" stop-opacity="0.2" />
-        <stop offset="8%" stop-color="#000000" stop-opacity="0.45" />
-        <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+        <stop offset="0%" stop-color="#000000" stop-opacity="0.75" />
+        <stop offset="25%" stop-color="#000000" stop-opacity="0.5" />
+        <stop offset="85%" stop-color="#ffffff" stop-opacity="0.12" />
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.6" />
       </linearGradient>
-      <radialGradient id="bbsVignette" cx="50%" cy="45%" r="65%">
-        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08" />
-        <stop offset="100%" stop-color="#000000" stop-opacity="0.8" />
+      <radialGradient id="bbsVignette" cx="50%" cy="50%" r="70%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.06" />
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.7" />
       </radialGradient>
       <pattern id="bbsGrain" width="40" height="40" patternUnits="userSpaceOnUse">
-        <circle cx="10" cy="10" r="0.8" fill="${scheme.foil}" opacity="0.12" />
-        <circle cx="30" cy="25" r="0.8" fill="${scheme.accent}" opacity="0.1" />
-        <circle cx="20" cy="35" r="0.6" fill="#ffffff" opacity="0.1" />
+        <circle cx="10" cy="10" r="0.8" fill="${scheme.foil}" opacity="0.1" />
+        <circle cx="30" cy="25" r="0.8" fill="${scheme.accent}" opacity="0.08" />
+        <circle cx="20" cy="35" r="0.6" fill="#ffffff" opacity="0.08" />
       </pattern>
     </defs>
 
-    <!-- Hardcover Background -->
-    <rect width="400" height="560" rx="8" fill="url(#bbsBgGrad)" />
-    <rect width="400" height="560" rx="8" fill="url(#bbsGrain)" />
-    <rect width="400" height="560" rx="8" fill="url(#bbsVignette)" />
+    <!-- Landscape Hardcover Background -->
+    <rect width="640" height="400" rx="10" fill="url(#bbsBgGrad)" />
+    <rect width="640" height="400" rx="10" fill="url(#bbsGrain)" />
+    <rect width="640" height="400" rx="10" fill="url(#bbsVignette)" />
 
-    <!-- Spine groove line -->
-    <rect x="0" y="0" width="30" height="560" fill="url(#bbsSpineShadow)" />
-    <line x1="28" y1="0" x2="28" y2="560" stroke="#000000" stroke-width="2" opacity="0.4" />
-    <line x1="29" y1="0" x2="29" y2="560" stroke="#ffffff" stroke-width="1" opacity="0.2" />
+    <!-- Left Album Spine Binding & Stitching -->
+    <rect x="0" y="0" width="36" height="400" fill="url(#bbsSpineShadow)" />
+    <line x1="34" y1="0" x2="34" y2="400" stroke="#000000" stroke-width="2.5" opacity="0.5" />
+    <line x1="36" y1="0" x2="36" y2="400" stroke="${scheme.foil}" stroke-width="1" opacity="0.3" />
+
+    <!-- Album Spine Rivets / Binding Accents -->
+    <circle cx="18" cy="40" r="3.5" fill="${scheme.foil}" stroke="#000" stroke-width="1" opacity="0.85" />
+    <circle cx="18" cy="120" r="3.5" fill="${scheme.foil}" stroke="#000" stroke-width="1" opacity="0.85" />
+    <circle cx="18" cy="200" r="3.5" fill="${scheme.foil}" stroke="#000" stroke-width="1" opacity="0.85" />
+    <circle cx="18" cy="280" r="3.5" fill="${scheme.foil}" stroke="#000" stroke-width="1" opacity="0.85" />
+    <circle cx="18" cy="360" r="3.5" fill="${scheme.foil}" stroke="#000" stroke-width="1" opacity="0.85" />
+
+    <!-- Right Page Gilded Edge Preview -->
+    <rect x="634" y="8" width="6" height="384" rx="2" fill="#d4af37" opacity="0.75" />
+    <line x1="636" y1="12" x2="636" y2="388" stroke="#ffffff" stroke-width="0.8" opacity="0.4" />
 
     <!-- Outer Decorative Border (Embossed Yellow Gold & Turquoise Frame) -->
-    <rect x="42" y="32" width="326" height="496" rx="4" fill="none" stroke="url(#bbsFoilGrad)" stroke-width="2.5" opacity="0.9" />
-    <rect x="48" y="38" width="314" height="484" rx="2" fill="none" stroke="${scheme.accent}" stroke-width="1" stroke-dasharray="3,3" opacity="0.75" />
+    <rect x="50" y="22" width="570" height="356" rx="6" fill="none" stroke="url(#bbsFoilGrad)" stroke-width="2.2" opacity="0.9" />
+    <rect x="56" y="28" width="558" height="344" rx="4" fill="none" stroke="${scheme.accent}" stroke-width="1" stroke-dasharray="3,3" opacity="0.65" />
 
-    <!-- Corner Ornaments in Turquoise & Yellow -->
+    <!-- Corner Ornaments -->
     <g stroke="url(#bbsFoilGrad)" stroke-width="1.8" fill="none" opacity="0.95">
-      <path d="M 52 52 L 72 52 M 52 52 L 52 72" />
-      <path d="M 358 52 L 338 52 M 358 52 L 358 72" />
-      <path d="M 52 518 L 72 518 M 52 518 L 52 498" />
-      <path d="M 358 518 L 338 518 M 358 518 L 358 498" />
+      <path d="M 60 40 L 78 40 M 60 40 L 60 58" />
+      <path d="M 610 40 L 592 40 M 610 40 L 610 58" />
+      <path d="M 60 360 L 78 360 M 60 360 L 60 342" />
+      <path d="M 610 360 L 592 360 M 610 360 L 610 342" />
     </g>
 
-    <!-- Official BBS Pictogram Heraldic Crest Emblem -->
-    <g transform="translate(205, 160) scale(0.24)">
+    <!-- Left: Official BBS Pictogram Heraldic Crest Emblem -->
+    <g transform="translate(145, 185) scale(0.24)">
       <defs>
         <clipPath id="coverShieldClip">
           <path d="M -155 -190 L 155 -190 L 155 30 C 155 125, 60 170, 0 190 C -60 170, -155 125, -155 30 Z" />
         </clipPath>
       </defs>
 
-      <!-- Shield Background and Cross (Clipped) -->
+      <!-- Shield Background and Cross -->
       <g clip-path="url(#coverShieldClip)">
-        <!-- Top-Left: Turquoise -->
         <rect x="-155" y="-190" width="155" height="180" fill="#159899" />
-        <!-- Top-Right: White -->
         <rect x="0" y="-190" width="155" height="180" fill="#ffffff" />
-        <!-- Bottom-Left: White -->
         <rect x="-155" y="-10" width="155" height="200" fill="#ffffff" />
-        <!-- Bottom-Right: Turquoise -->
         <rect x="0" y="-10" width="155" height="200" fill="#159899" />
 
-        <!-- Navy Cross -->
         <rect x="-155" y="-80" width="310" height="70" fill="#031d3d" />
         <rect x="-33" y="-190" width="66" height="380" fill="#031d3d" />
 
-        <!-- BBS Typography -->
         <text x="-70" y="115" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="900" text-anchor="middle" fill="#031d3d">B</text>
         <text x="0" y="115" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="900" text-anchor="middle" fill="#ffffff">B</text>
         <text x="66" y="115" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="900" text-anchor="middle" fill="#031d3d">S</text>
 
-        <!-- Open Book at Cross Intersection -->
         <path d="M -2 -105 L -85 -125 L -85 -13 L -2 5 L 2 5 L 85 -13 L 85 -125 L 2 -105 Z" fill="#031d3d" />
         <path d="M -4 -99 L -76 -119 L -76 -19 L -4 -1 Z" fill="#ffffff" />
         <path d="M 4 -99 L 76 -119 L 76 -19 L 4 -1 Z" fill="#ffffff" />
         <line x1="0" y1="-101" x2="0" y2="1" stroke="#031d3d" stroke-width="2.5" />
 
-        <!-- 培 民 Characters -->
         <text x="-37" y="-41" font-family="'Kaiti', 'STKaiti', 'KaiTi', 'Noto Serif SC', 'SimSun', serif" font-size="34" font-weight="bold" text-anchor="middle" fill="#031d3d">培</text>
         <text x="37" y="-41" font-family="'Kaiti', 'STKaiti', 'KaiTi', 'Noto Serif SC', 'SimSun', serif" font-size="34" font-weight="bold" text-anchor="middle" fill="#031d3d">民</text>
       </g>
 
-      <!-- Outer Turquoise Frame -->
       <path d="M -155 -190 L 155 -190 L 155 30 C 155 125, 60 170, 0 190 C -60 170, -155 125, -155 30 Z" fill="none" stroke="#159899" stroke-width="12" stroke-linejoin="round" />
     </g>
 
-    <!-- School Header Text: BINA BANGSA SCHOOL -->
-    <text x="205" y="78" text-anchor="middle" font-family="'Cinzel', Georgia, serif" font-size="13" font-weight="800" letter-spacing="3" fill="#ffffff">
-      BINA BANGSA SCHOOL
-    </text>
-    <text x="205" y="94" text-anchor="middle" font-family="'Inter', sans-serif" font-size="9" font-weight="700" letter-spacing="2.5" fill="${scheme.accent}">
-      PANTAI INDAH KAPUK
-    </text>
-    <text x="205" y="106" text-anchor="middle" font-family="'Inter', sans-serif" font-size="7.5" font-weight="600" letter-spacing="1.5" fill="${scheme.foil}" opacity="0.9">
-      ANNUAL COMMEMORATIVE ARCHIVES
-    </text>
+    <!-- Vertical separator line between crest and title info -->
+    <line x1="225" y1="50" x2="225" y2="350" stroke="url(#bbsFoilGrad)" stroke-width="1.2" opacity="0.4" />
+    <circle cx="225" cy="200" r="3" fill="${scheme.foil}" />
 
-    <!-- Center Academic Year Badge -->
-    <g transform="translate(205, 255)">
-      <rect x="-105" y="-18" width="210" height="36" rx="18" fill="${scheme.bg1}" stroke="url(#bbsFoilGrad)" stroke-width="2" />
-      <text x="0" y="7" text-anchor="middle" font-family="'Cinzel', Georgia, serif" font-size="19" font-weight="800" letter-spacing="2" fill="${scheme.foil}">
-        ${safeYear}
+    <!-- Right: School Header Text -->
+    <g transform="translate(245, 0)">
+      <text x="0" y="70" font-family="'Cinzel', Georgia, serif" font-size="14" font-weight="800" letter-spacing="3" fill="#ffffff">
+        BINA BANGSA SCHOOL
+      </text>
+      <text x="0" y="88" font-family="'Inter', sans-serif" font-size="10" font-weight="700" letter-spacing="2.5" fill="${scheme.accent}">
+        PANTAI INDAH KAPUK CAMPUS
+      </text>
+      <text x="0" y="103" font-family="'Inter', sans-serif" font-size="8.5" font-weight="600" letter-spacing="1.5" fill="${scheme.foil}" opacity="0.9">
+        COMMEMORATIVE YEARBOOK ALBUM
+      </text>
+
+      <!-- Center Academic Year Badge in Landscape -->
+      <g transform="translate(0, 125)">
+        <rect x="0" y="0" width="160" height="32" rx="16" fill="${scheme.bg1}" stroke="url(#bbsFoilGrad)" stroke-width="1.8" />
+        <text x="80" y="21" text-anchor="middle" font-family="'Cinzel', Georgia, serif" font-size="16" font-weight="800" letter-spacing="2" fill="${scheme.foil}">
+          ${safeYear}
+        </text>
+      </g>
+
+      <!-- Main Album Title -->
+      <text x="0" y="205" font-family="'Playfair Display', Georgia, serif" font-size="24" font-weight="800" fill="#ffffff" letter-spacing="0.5">
+        ${truncateText(safeTitle, 28)}
+      </text>
+
+      <!-- Subtitle / Edition -->
+      <text x="0" y="232" font-family="'Inter', sans-serif" font-size="10" font-weight="700" letter-spacing="3" fill="${scheme.accent}">
+        OFFICIAL CERTIFIED ARCHIVE
+      </text>
+
+      <line x1="0" y1="250" x2="330" y2="250" stroke="url(#bbsFoilGrad)" stroke-width="1.2" opacity="0.75" />
+
+      <!-- Bottom School Motto & Archival Badge -->
+      <text x="0" y="285" font-family="'Playfair Display', Georgia, italic" font-size="12" font-weight="600" fill="#ffffff">
+        "Gloria Dei Vivens Homo"
+      </text>
+      <text x="0" y="305" font-family="'Inter', sans-serif" font-size="9" letter-spacing="2" font-weight="600" fill="${scheme.accent}">
+        HISTORICAL RECOLLECTION & STUDENT PORTFOLIO
+      </text>
+      <text x="0" y="322" font-family="'Inter', sans-serif" font-size="8.5" letter-spacing="1.5" font-weight="500" fill="#93c5fd" opacity="0.8">
+        JAKARTA UTARA, INDONESIA
       </text>
     </g>
-
-    <!-- Main Yearbook Title -->
-    <text x="205" y="335" text-anchor="middle" font-family="'Playfair Display', Georgia, serif" font-size="23" font-weight="700" fill="#ffffff" letter-spacing="0.5">
-      ${truncateText(safeTitle, 26)}
-    </text>
-
-    <!-- Subtitle / Edition -->
-    <text x="205" y="365" text-anchor="middle" font-family="'Inter', sans-serif" font-size="10" font-weight="700" letter-spacing="3" fill="${scheme.accent}">
-      OFFICIAL BBS PIK VOLUME
-    </text>
-
-    <line x1="110" y1="385" x2="300" y2="385" stroke="url(#bbsFoilGrad)" stroke-width="1.2" opacity="0.75" />
-    <circle cx="205" cy="385" r="3.5" fill="${scheme.foil}" />
-
-    <!-- Bottom School Motto & Location -->
-    <text x="205" y="475" text-anchor="middle" font-family="'Playfair Display', Georgia, italic" font-size="11" font-weight="600" fill="#ffffff">
-      "Gloria Dei Vivens Homo"
-    </text>
-    <text x="205" y="495" text-anchor="middle" font-family="'Inter', sans-serif" font-size="8.5" letter-spacing="2" font-weight="600" fill="${scheme.accent}">
-      PANTAI INDAH KAPUK • JAKARTA
-    </text>
   </svg>`;
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;

@@ -270,42 +270,56 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         )}
       </section>
 
-      {/* Yearbook Cards Grid */}
+      {/* Yearbook Landscape Albums Grid */}
       {filteredYearbooks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7 sm:gap-8">
           {filteredYearbooks.map((yearbook) => (
             <article
               key={yearbook.id}
-              className="group bg-[#071936] rounded-2xl border border-cyan-900/80 hover:border-cyan-400/80 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 flex flex-col overflow-hidden"
+              className="group bg-[#071936] rounded-2xl border border-cyan-900/80 hover:border-cyan-400/80 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/15 transition-all duration-300 flex flex-col overflow-hidden"
             >
-              {/* Hardcover Book Graphic Presentation */}
+              {/* Landscape Hardcover Album Presentation */}
               <div
                 onClick={() => onSelectYearbook(yearbook)}
-                className="relative aspect-[3/4] w-full bg-[#030d1d] overflow-hidden cursor-pointer p-4 flex items-center justify-center group-hover:scale-[1.01] transition-transform duration-300"
+                className="relative aspect-[16/10] w-full bg-[#020b18] overflow-hidden cursor-pointer p-3 sm:p-4 flex items-center justify-center group-hover:bg-[#031124] transition-colors"
               >
-                {/* Book Drop Shadow & Hardcover Look */}
-                <div className="relative w-full h-full max-w-[280px] rounded-lg shadow-2xl overflow-hidden ring-1 ring-cyan-500/20 group-hover:ring-cyan-400/60 transition-all">
+                {/* 3D Landscape Hardcover Album Container */}
+                <div className="relative w-full h-full rounded-xl shadow-2xl overflow-hidden ring-1 ring-cyan-500/30 group-hover:ring-yellow-400/70 transition-all bg-[#040f22] flex items-center justify-center">
                   <img
                     src={yearbook.coverImageUrl}
-                    alt={`${yearbook.year} - ${yearbook.title} Cover`}
-                    className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
+                    alt={`${yearbook.year} - ${yearbook.title} Album Cover`}
+                    className="w-full h-full object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-500"
                     loading="lazy"
                   />
 
-                  {/* Spine Effect on Left Edge */}
-                  <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-black/80 via-black/20 to-transparent pointer-events-none"></div>
-
-                  {/* Foil Sheen Highlight overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/0 to-cyan-300/15 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-
-                  {/* Prominent Academic Year Badge Overlay */}
-                  <div className="absolute top-3 right-3 bg-[#071630]/95 backdrop-blur-md border border-yellow-400/60 text-yellow-300 font-serif font-extrabold text-xs px-2.5 py-1 rounded-md shadow-lg">
-                    {yearbook.year}
+                  {/* Left Spine Binding Bar (Authentic Album Hardcover Look) */}
+                  <div className="absolute left-0 top-0 bottom-0 w-4 sm:w-5 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none flex flex-col justify-around items-center py-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
                   </div>
 
-                  {/* Featured ribbon if applicable */}
+                  {/* Gilded Page Edges along Right Side */}
+                  <div className="absolute right-0 top-1 bottom-1 w-1.5 bg-gradient-to-l from-yellow-400/60 to-transparent rounded-r pointer-events-none" />
+
+                  {/* Foil Sheen Highlight overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-cyan-300/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                  {/* Academic Year Plaque */}
+                  <div className="absolute top-2.5 right-2.5 bg-[#071630]/95 backdrop-blur-md border border-yellow-400/80 text-yellow-300 font-serif font-extrabold text-xs px-2.5 py-1 rounded-lg shadow-lg flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3 text-yellow-400" />
+                    <span>{yearbook.year}</span>
+                  </div>
+
+                  {/* Landscape Album Format Badge */}
+                  <div className="absolute bottom-2.5 left-6 bg-[#071630]/90 backdrop-blur-md border border-cyan-500/50 text-cyan-200 text-[10px] font-bold px-2 py-0.5 rounded-md shadow flex items-center gap-1">
+                    <BookOpen className="w-3 h-3 text-cyan-400" />
+                    <span>Landscape Album</span>
+                  </div>
+
+                  {/* Milestone ribbon if applicable */}
                   {yearbook.featured && (
-                    <div className="absolute top-3 left-3 bg-yellow-400 text-[#071630] font-extrabold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shadow">
+                    <div className="absolute top-2.5 left-6 bg-yellow-400 text-[#071630] font-extrabold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shadow-md">
                       Milestone
                     </div>
                   )}
@@ -321,15 +335,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       <Calendar className="w-3.5 h-3.5" />
                       Academic Year {yearbook.year}
                     </span>
-                    <span className="font-mono text-[11px] text-cyan-300/90">
-                      {yearbook.pageCount} pages
+                    <span className="font-mono text-[11px] text-cyan-300/90 font-semibold">
+                      {yearbook.pageCount} certified pages
                     </span>
                   </div>
 
                   {/* Title */}
                   <h3
                     onClick={() => onSelectYearbook(yearbook)}
-                    className="font-serif text-lg font-bold text-white hover:text-yellow-400 transition-colors cursor-pointer line-clamp-1"
+                    className="font-serif text-lg sm:text-xl font-bold text-white hover:text-yellow-400 transition-colors cursor-pointer line-clamp-1"
                     title={yearbook.title}
                   >
                     {yearbook.title}
@@ -355,27 +369,27 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   )}
                 </div>
 
-                {/* Card Action Buttons: Preview and Download */}
+                {/* Card Action Buttons: Open Album and Download */}
                 <div className="mt-5 pt-4 border-t border-cyan-950/80 flex items-center gap-2">
-                  {/* Primary Read/Preview Button in Dark Blue & Turquoise */}
+                  {/* Primary Open Album Button in Dark Blue & Yellow */}
                   <button
                     onClick={() => onSelectYearbook(yearbook)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-[#0b244d] hover:bg-cyan-700 text-white font-semibold text-xs rounded-xl border border-cyan-500/30 transition-all cursor-pointer group-hover:border-cyan-400"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-yellow-400/15 border border-yellow-300 transition-all cursor-pointer group-hover:scale-[1.01]"
                   >
-                    <BookOpen className="w-3.5 h-3.5 text-yellow-400" />
-                    <span>View & Read</span>
+                    <BookOpen className="w-4 h-4 stroke-[2.4]" />
+                    <span>Open Album</span>
                   </button>
 
-                  {/* Direct Download Button in Yellow */}
+                  {/* Direct Download Button in Dark Blue/Cyan */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       downloadYearbookFile(yearbook);
                     }}
-                    className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-yellow-400/15 hover:bg-yellow-400 text-yellow-300 hover:text-[#071630] font-bold text-xs rounded-xl border border-yellow-400/40 transition-all cursor-pointer"
-                    title={`Download full PDF (${yearbook.fileSize})`}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#0b244d] hover:bg-[#0f2f63] text-cyan-200 hover:text-white font-bold text-xs rounded-xl border border-cyan-600/50 transition-all cursor-pointer"
+                    title={`Download full PDF archive (${yearbook.fileSize})`}
                   >
-                    <Download className="w-3.5 h-3.5" />
+                    <Download className="w-3.5 h-3.5 text-yellow-400" />
                     <span className="hidden xs:inline">PDF</span>
                   </button>
 
@@ -386,7 +400,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                         e.stopPropagation();
                         onEditYearbook(yearbook);
                       }}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-yellow-400/20 hover:bg-yellow-400 text-yellow-300 hover:text-[#071630] font-bold text-xs rounded-xl border border-yellow-400/60 shadow-sm transition-all cursor-pointer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-cyan-950 hover:bg-yellow-400 hover:text-[#071630] text-yellow-300 font-bold text-xs rounded-xl border border-yellow-400/60 shadow-sm transition-all cursor-pointer"
                       title="Edit cover, academic year, title, overview and document info (Admin Mode)"
                     >
                       <Edit3 className="w-3.5 h-3.5" />

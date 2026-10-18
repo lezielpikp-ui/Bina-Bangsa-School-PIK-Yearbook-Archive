@@ -153,72 +153,41 @@ export const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ isOpen, onClos
             <div className="space-y-5">
               <div>
                 <h3 className="text-base font-serif font-bold text-white mb-1">
-                  Admin Credentials & Account Setup
+                  Administrator Access Policy
                 </h3>
                 <p className="text-xs text-cyan-200/80">
-                  Public registration is disabled to safeguard school records. Only authorized school administrators can add or modify yearbooks.
+                  Public registration is disabled to safeguard school records. Only authorized school administrators can add, edit, or remove yearbooks.
                 </p>
               </div>
 
-              {/* Default Credentials Box */}
-              <div className="p-4 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-xs space-y-3">
+              {/* Admin Policy Notice */}
+              <div className="p-4 rounded-xl bg-[#030d1d] border border-cyan-800/80 text-xs space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-yellow-300 flex items-center gap-1.5">
-                    <Key className="w-4 h-4" />
-                    BBS PIK Administrator Credentials
+                    <Key className="w-4 h-4 text-cyan-400" />
+                    BBS PIK Administrator Access
                   </span>
-                  <span className="text-[10px] uppercase font-mono text-cyan-300">School Domain</span>
+                  <span className="text-[10px] uppercase font-mono text-cyan-300">Confidential</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono">
-                  <div className="bg-[#030d1d] p-2.5 rounded-lg border border-cyan-900 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] text-cyan-300/80 font-sans">Admin Email</div>
-                      <div className="text-white text-xs">{DEFAULT_ADMIN_CONFIG.email}</div>
-                    </div>
-                    <button
-                      onClick={() => handleCopy(DEFAULT_ADMIN_CONFIG.email, 'email')}
-                      className="p-1 text-cyan-300 hover:text-yellow-400 cursor-pointer"
-                      title="Copy email"
-                    >
-                      {copiedKey === 'email' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-
-                  <div className="bg-[#030d1d] p-2.5 rounded-lg border border-cyan-900 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] text-cyan-300/80 font-sans">Password</div>
-                      <div className="text-white text-xs">{DEFAULT_ADMIN_CONFIG.password}</div>
-                    </div>
-                    <button
-                      onClick={() => handleCopy(DEFAULT_ADMIN_CONFIG.password, 'pass')}
-                      className="p-1 text-cyan-300 hover:text-yellow-400 cursor-pointer"
-                      title="Copy password"
-                    >
-                      {copiedKey === 'pass' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
+                <p className="text-cyan-200/80 text-xs leading-relaxed">
+                  Administrative passwords and access credentials are strictly confidential and issued exclusively to designated Bina Bangsa School Pantai Indah Kapuk archivists.
+                </p>
+                <div className="p-3 bg-[#071630] rounded-lg border border-cyan-700/60 font-mono text-xs text-cyan-300 flex items-center justify-between">
+                  <span>Authorized Domain: @binabangsaschool.com</span>
+                  <span className="text-emerald-400 font-bold">Protected</span>
                 </div>
-                <p className="text-[11px] text-cyan-200/80">
-                  Tip: On the Admin Login page, you can click <strong className="text-yellow-300">"Fill Credentials"</strong> to instantly authenticate.
+                <p className="text-[11px] text-cyan-300/70">
+                  School staff requiring administrator access should contact the BBS PIK IT or Archival Administration department.
                 </p>
               </div>
 
-              {/* Where to configure credentials */}
               <div className="space-y-2">
                 <span className="font-bold text-xs text-white block">
-                  How to Change or Manage Administrator Accounts
+                  Security Guidelines
                 </span>
                 <p className="text-xs text-cyan-200/80 leading-relaxed">
-                  Open <code className="text-yellow-300 font-mono">src/services/authService.ts</code>:
+                  Never share administrative passwords. All administrative modifications, uploads, and deletions are saved securely to the school archival database.
                 </p>
-                <div className="bg-[#030d1d] border border-cyan-900 rounded-xl p-4 font-mono text-xs">
-                  <div className="text-cyan-400/80">// Update DEFAULT_ADMIN_CONFIG with school credentials:</div>
-                  <div className="text-white mt-1">export const DEFAULT_ADMIN_CONFIG = &#123;</div>
-                  <div className="text-cyan-200 pl-4">email: 'leziel.pikp@binabangsaschool.com',</div>
-                  <div className="text-cyan-200 pl-4">password: 'YourSecureSchoolPass2026!',</div>
-                  <div className="text-cyan-200 pl-4">fullName: 'Bina Bangsa School-Pantai Indah Kapuk Archivist',</div>
-                  <div className="text-white">&#125;;</div>
-                </div>
               </div>
             </div>
           )}

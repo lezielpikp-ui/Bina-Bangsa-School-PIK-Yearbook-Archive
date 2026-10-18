@@ -50,7 +50,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
   const [pageInputVal, setPageInputVal] = useState<string>(String(initialPage));
   const [zoomLevel, setZoomLevel] = useState<number>(100);
-  const [viewMode, setViewMode] = useState<'single' | 'spread'>('single');
+  const [viewMode, setViewMode] = useState<'single' | 'spread'>('spread');
   const [showThumbnails, setShowThumbnails] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -117,11 +117,25 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
 
         if (isCancelled) return;
 
-        const loadingTask = pdfjsLib.getDocument({
-          data: pdfData instanceof Uint8Array ? pdfData : new Uint8Array(pdfData),
-        });
+        // CRITICAL BUG FIX: Always slice buffer copy so Web Worker transfer doesn't detach original ArrayBuffer in memory cache
+        const bufferCopy = pdfData instanceof Uint8Array
+          ? pdfData.slice()
+          : new Uint8Array(pdfData.slice(0));
 
-        const doc = await loadingTask.promise;
+        let doc: pdfjsLib.PDFDocumentProxy;
+        try {
+          const loadingTask = pdfjsLib.getDocument({
+            data: bufferCopy,
+          });
+          doc = await loadingTask.promise;
+        } catch (dataLoadErr) {
+          console.warn('Direct PDF data load issue, trying Blob URL loader:', dataLoadErr);
+          const blob = new Blob([bufferCopy], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          const urlTask = pdfjsLib.getDocument({ url: blobUrl });
+          doc = await urlTask.promise;
+        }
+
         if (isCancelled) return;
 
         setPdfDoc(doc);
@@ -178,6 +192,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
 
       context.save();
       context.scale(dpr, dpr);
+      context.clearRect(0, 0, viewport.width, viewport.height);
 
       const renderTask = page.render({
         canvas: canvas,
@@ -191,7 +206,6 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
         await renderTask.promise;
       } catch (err: unknown) {
         if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'RenderingCancelledException') {
-          // Expected cancellation when user clicks fast
           return;
         }
         console.warn('Canvas render notice:', err);
@@ -218,9 +232,9 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
             await renderPageToCanvas(currentPage, singleCanvasRef.current, zoomLevel);
           }
         } else {
-          // Spread mode (Two pages side by side)
+          // Spread mode (Album Two pages side by side)
           if (currentPage === 1) {
-            // Cover: single page centered
+            // Album Front Cover: single page centered
             if (singleCanvasRef.current) {
               await renderPageToCanvas(1, singleCanvasRef.current, zoomLevel);
             }
@@ -233,8 +247,13 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
             if (leftCanvasRef.current && leftPageNum <= pdfDoc!.numPages) {
               tasks.push(renderPageToCanvas(leftPageNum, leftCanvasRef.current, zoomLevel * 0.9));
             }
-            if (rightCanvasRef.current && rightPageNum <= pdfDoc!.numPages) {
-              tasks.push(renderPageToCanvas(rightPageNum, rightCanvasRef.current, zoomLevel * 0.9));
+            if (rightCanvasRef.current) {
+              if (rightPageNum <= pdfDoc!.numPages) {
+                tasks.push(renderPageToCanvas(rightPageNum, rightCanvasRef.current, zoomLevel * 0.9));
+              } else {
+                const ctx = rightCanvasRef.current.getContext('2d');
+                if (ctx) ctx.clearRect(0, 0, rightCanvasRef.current.width, rightCanvasRef.current.height);
+              }
             }
             await Promise.all(tasks);
           }
@@ -268,8 +287,14 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
 
   const handleNext = () => {
     if (!pdfDoc) return;
-    if (viewMode === 'spread' && currentPage > 1) {
-      goToPage(Math.min(currentPage + 2, totalPages));
+    if (viewMode === 'spread') {
+      if (currentPage === 1) {
+        goToPage(2);
+      } else {
+        const currentLeft = currentPage % 2 === 0 ? currentPage : currentPage - 1;
+        const nextLeft = currentLeft + 2;
+        goToPage(Math.min(nextLeft, totalPages));
+      }
     } else {
       goToPage(Math.min(currentPage + 1, totalPages));
     }
@@ -277,8 +302,14 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
 
   const handlePrev = () => {
     if (!pdfDoc) return;
-    if (viewMode === 'spread' && currentPage > 2) {
-      goToPage(Math.max(currentPage - 2, 1));
+    if (viewMode === 'spread') {
+      if (currentPage <= 3) {
+        goToPage(1);
+      } else {
+        const currentLeft = currentPage % 2 === 0 ? currentPage : currentPage - 1;
+        const prevLeft = currentLeft - 2;
+        goToPage(Math.max(prevLeft, 1));
+      }
     } else {
       goToPage(Math.max(currentPage - 1, 1));
     }
@@ -567,43 +598,94 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
             <>
               {viewMode === 'single' || currentPage === 1 ? (
                 <div
-                  className="relative transition-transform duration-200 flex flex-col items-center"
+                  className="relative transition-transform duration-200 flex flex-col items-center max-w-full"
                   style={{
                     transformOrigin: 'center center',
                   }}
                 >
-                  {/* Page Canvas Container with Realistic Hardcover Drop Shadow */}
-                  <div className="bg-white rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-cyan-800/40 overflow-hidden relative group">
-                    <canvas ref={singleCanvasRef} className="block max-w-full h-auto" />
+                  {/* Album Cover Container with Realistic Hardcover Drop Shadow */}
+                  <div className="bg-white rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] border-2 border-yellow-400/40 overflow-hidden relative group">
+                    <canvas ref={singleCanvasRef} className="block max-w-full h-auto cursor-pointer" onClick={handleNext} title="Click to open album" />
                     {/* Subtle book spine shadow on left edge */}
-                    <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-black/40 to-transparent pointer-events-none" />
+                    <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/60 to-transparent pointer-events-none" />
                   </div>
-                  <span className="text-[11px] font-mono text-cyan-300 mt-2 font-semibold">
-                    Page {currentPage} of {totalPages} {currentPage === 1 ? '• Cover' : ''}
-                  </span>
+
+                  <div className="flex items-center gap-3 mt-3">
+                    <span className="text-xs font-mono text-cyan-200 font-semibold px-2.5 py-1 rounded-md bg-[#071630] border border-cyan-800">
+                      Page {currentPage} of {totalPages} {currentPage === 1 ? '• Album Cover' : ''}
+                    </span>
+                    {currentPage === 1 && totalPages > 1 && (
+                      <button
+                        onClick={handleNext}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs shadow-md shadow-yellow-400/20 cursor-pointer transition-transform hover:scale-105"
+                      >
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Open Album (Turn Page)</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ) : (
-                /* Two-Page Spread Mode */
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center justify-center shadow-[0_25px_60px_rgba(0,0,0,0.85)] rounded-xl overflow-hidden border border-cyan-800/50 bg-[#071630]">
-                    {/* Left Page (Even Page) */}
-                    <div className="bg-white relative border-r border-slate-300">
+                /* Two-Page Open Album Spread Mode */
+                <div className="flex flex-col items-center max-w-full">
+                  <div className="flex items-center justify-center shadow-[0_30px_70px_rgba(0,0,0,0.9)] rounded-2xl overflow-hidden border-2 border-cyan-700/60 bg-[#061733] p-1.5 sm:p-2.5">
+                    {/* Left Page (Even Page) - Click turns left/prev */}
+                    <div
+                      onClick={handlePrev}
+                      className="bg-white relative border-r border-slate-300 cursor-pointer group"
+                      title="Click left page to flip back"
+                    >
                       <canvas ref={leftCanvasRef} className="block max-w-full h-auto" />
                       {/* Spine shadow right edge */}
-                      <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-black/35 to-transparent pointer-events-none" />
+                      <div className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-black/40 via-black/15 to-transparent pointer-events-none" />
+                      {/* Hover page turn indicator */}
+                      <div className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-80 transition-opacity pointer-events-none">
+                        <ChevronLeft className="w-5 h-5" />
+                      </div>
                     </div>
 
-                    {/* Right Page (Odd Page) */}
-                    <div className="bg-white relative">
+                    {/* Right Page (Odd Page) - Click turns right/next */}
+                    <div
+                      onClick={handleNext}
+                      className="bg-white relative cursor-pointer group"
+                      title="Click right page to turn next"
+                    >
                       <canvas ref={rightCanvasRef} className="block max-w-full h-auto" />
                       {/* Spine shadow left edge */}
-                      <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/35 to-transparent pointer-events-none" />
+                      <div className="absolute left-0 top-0 bottom-0 w-5 bg-gradient-to-r from-black/40 via-black/15 to-transparent pointer-events-none" />
+                      {/* Hover page turn indicator */}
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-80 transition-opacity pointer-events-none">
+                        <ChevronRight className="w-5 h-5" />
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[11px] font-mono text-cyan-300 mt-2 font-semibold">
-                    Pages {currentPage % 2 === 0 ? currentPage : currentPage - 1} &{' '}
-                    {currentPage % 2 === 0 ? currentPage + 1 : currentPage} of {totalPages}
-                  </span>
+
+                  {/* Album Spread Navigation & Page Indicator */}
+                  <div className="flex items-center gap-3 mt-3">
+                    <button
+                      onClick={handlePrev}
+                      disabled={currentPage <= 1}
+                      className="px-2.5 py-1 text-xs font-bold text-cyan-200 hover:text-white bg-[#071630] disabled:opacity-30 border border-cyan-800 hover:border-cyan-500 rounded-lg cursor-pointer transition-colors flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Prev Pages</span>
+                    </button>
+
+                    <span className="text-xs font-mono text-yellow-300 font-bold px-3 py-1 rounded-md bg-[#071630] border border-yellow-400/50 shadow-sm">
+                      Album Spread • Pages {currentPage % 2 === 0 ? currentPage : currentPage - 1} &{' '}
+                      {Math.min((currentPage % 2 === 0 ? currentPage : currentPage - 1) + 1, totalPages)} of {totalPages}
+                    </span>
+
+                    <button
+                      onClick={handleNext}
+                      disabled={currentPage >= totalPages}
+                      className="px-2.5 py-1 text-xs font-bold text-[#071630] bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      <span>Next Pages</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               )}
             </>
