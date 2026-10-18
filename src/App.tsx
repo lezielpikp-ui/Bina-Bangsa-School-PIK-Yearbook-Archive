@@ -9,6 +9,7 @@ import { PublicGallery } from './components/PublicGallery';
 import { AdminPortal } from './components/AdminPortal';
 import { YearbookViewerModal } from './components/YearbookViewerModal';
 import { SetupGuideModal } from './components/SetupGuideModal';
+import { AdminYearbookModal } from './components/AdminYearbookModal';
 import { Yearbook, AdminUser } from './types/yearbook';
 import {
   getAllYearbooks,
@@ -28,8 +29,19 @@ export default function App() {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() => getActiveAdminSession());
   const [currentView, setCurrentView] = useState<'gallery' | 'admin'>('gallery');
   const [selectedYearbook, setSelectedYearbook] = useState<Yearbook | null>(null);
+  const [yearbookToEdit, setYearbookToEdit] = useState<Yearbook | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSetupGuideOpen, setIsSetupGuideOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' } | null>(null);
+
+  const handleOpenEdit = (yearbook: Yearbook) => {
+    if (!adminUser) {
+      showToast('Administrator login required to edit yearbook archives.', 'info');
+      return;
+    }
+    setYearbookToEdit(yearbook);
+    setIsEditModalOpen(true);
+  };
 
   const showToast = (text: string, type: 'success' | 'info' = 'success') => {
     setToastMessage({ text, type });
@@ -61,7 +73,7 @@ export default function App() {
   const handleSaveYearbook = (data: Yearbook) => {
     const updated = saveYearbook(data);
     setYearbooks(updated);
-    showToast(`Yearbook "${data.title}" (${data.year}) published successfully.`);
+    showToast(`Yearbook "${data.title}" (${data.year}) saved and published successfully.`);
   };
 
   // Delete action
@@ -82,6 +94,8 @@ export default function App() {
   const handleLogout = () => {
     logoutAdmin();
     setAdminUser(null);
+    setIsEditModalOpen(false);
+    setYearbookToEdit(null);
     showToast('Admin session logged out successfully.', 'info');
   };
 
@@ -114,6 +128,8 @@ export default function App() {
           <PublicGallery
             yearbooks={yearbooks}
             onSelectYearbook={(yb) => setSelectedYearbook(yb)}
+            onEditYearbook={adminUser ? handleOpenEdit : undefined}
+            adminUser={adminUser}
           />
         ) : (
           <AdminPortal
@@ -134,7 +150,30 @@ export default function App() {
       <YearbookViewerModal
         yearbook={selectedYearbook}
         onClose={() => setSelectedYearbook(null)}
+        onEdit={adminUser ? handleOpenEdit : undefined}
+        adminUser={adminUser}
       />
+
+      {/* Global Edit / Upload Modal - Only accessible when in Admin Login Mode */}
+      {adminUser && (
+        <AdminYearbookModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setYearbookToEdit(null);
+          }}
+          onSave={(data) => {
+            handleSaveYearbook(data);
+            setIsEditModalOpen(false);
+            setYearbookToEdit(null);
+            if (selectedYearbook && selectedYearbook.id === data.id) {
+              setSelectedYearbook(data);
+            }
+          }}
+          yearbookToEdit={yearbookToEdit}
+          adminUser={adminUser}
+        />
+      )}
 
       {/* Modal: Setup & Deployment Instructions */}
       <SetupGuideModal

@@ -4,16 +4,36 @@
  */
 
 import { Yearbook } from '../types/yearbook';
+import { getPdfFile } from '../services/pdfStore';
 
 /**
- * Creates and downloads a real valid PDF file or downloads the existing data URL.
+ * Creates and downloads a real valid PDF file or downloads the existing data URL or stored file.
  */
-export function downloadYearbookFile(yearbook: Yearbook): void {
+export async function downloadYearbookFile(yearbook: Yearbook): Promise<void> {
+  // Check if real uploaded PDF exists in IndexedDB store
+  try {
+    const storedPdf = await getPdfFile(yearbook.id);
+    if (storedPdf) {
+      const blob = new Blob([storedPdf], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = yearbook.fileName || `BBS_PIK_Yearbook_${yearbook.year}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      return;
+    }
+  } catch (err) {
+    console.warn('Could not read from pdfStore during download:', err);
+  }
+
   // If the yearbook file is already a valid data URL or external URL, download it directly
   if (yearbook.fileUrl && yearbook.fileUrl.startsWith('data:application/pdf')) {
     const link = document.createElement('a');
     link.href = yearbook.fileUrl;
-    link.download = yearbook.fileName || `Yearbook_${yearbook.year}.pdf`;
+    link.download = yearbook.fileName || `BBS_PIK_Yearbook_${yearbook.year}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -25,7 +45,7 @@ export function downloadYearbookFile(yearbook: Yearbook): void {
   const blobUrl = URL.createObjectURL(pdfBlob);
   const link = document.createElement('a');
   link.href = blobUrl;
-  link.download = yearbook.fileName || `Yearbook_${yearbook.year.replace(/[^\w-]/g, '_')}.pdf`;
+  link.download = yearbook.fileName || `BBS_PIK_Yearbook_${yearbook.year.replace(/[^\w-]/g, '_')}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

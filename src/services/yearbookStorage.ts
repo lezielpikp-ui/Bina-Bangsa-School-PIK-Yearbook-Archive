@@ -5,6 +5,7 @@
 
 import { Yearbook } from '../types/yearbook';
 import { generateCoverSvgDataUrl } from '../utils/coverGenerator';
+import { deletePdfFile } from './pdfStore';
 
 const STORAGE_KEY = 'bbs_pik_yearbook_gallery_records_v3';
 
@@ -321,6 +322,7 @@ export function deleteYearbook(id: string): Yearbook[] {
   const all = getAllYearbooks();
   const filtered = all.filter((item) => item.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  deletePdfFile(id).catch(() => {});
   window.dispatchEvent(new CustomEvent('yearbooks_updated'));
   return filtered;
 }

@@ -15,19 +15,25 @@ import {
   RotateCcw,
   Layers,
   FileCheck,
+  Edit3,
+  Shield,
 } from 'lucide-react';
-import { Yearbook, SortOption } from '../types/yearbook';
+import { Yearbook, SortOption, AdminUser } from '../types/yearbook';
 import { downloadYearbookFile } from '../utils/pdfHelper';
 import { BBSLogo } from './BBSLogo';
 
 interface PublicGalleryProps {
   yearbooks: Yearbook[];
   onSelectYearbook: (yearbook: Yearbook) => void;
+  onEditYearbook?: (yearbook: Yearbook) => void;
+  adminUser?: AdminUser | null;
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({
   yearbooks,
   onSelectYearbook,
+  onEditYearbook,
+  adminUser,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDecade, setSelectedDecade] = useState<string>('all');
@@ -89,6 +95,34 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   return (
     <div className="space-y-10 pb-16">
+      {/* Admin Logged-In Mode Banner (Confirms editable version is exclusive to admin) */}
+      {adminUser && (
+        <div className="rounded-2xl bg-gradient-to-r from-[#071630] via-[#092248] to-[#071630] border border-yellow-400/60 p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-yellow-400/15 border border-yellow-400/40 flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5 text-yellow-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-sm">
+                  Administrator Mode Active
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Direct Editing Enabled
+                </span>
+              </div>
+              <p className="text-xs text-cyan-200/80 mt-0.5">
+                Logged in as <strong className="text-white">{adminUser.email}</strong>. You can click <strong>Edit</strong> on any yearbook card or inside the reader to update cover, academic year, title, overview, and document files.
+              </p>
+            </div>
+          </div>
+          <div className="text-[11px] font-mono text-cyan-300 bg-[#040e20] px-3 py-1.5 rounded-lg border border-cyan-800">
+            Editable version is restricted to admin session
+          </div>
+        </div>
+      )}
+
       {/* Hero Presentation Header with BBS PIK Palette: Dark Blue, Yellow, White & Turquoise */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0a1e3f] via-[#071630] to-[#040e20] border border-cyan-500/30 p-6 sm:p-10 lg:p-12 shadow-2xl">
         {/* Subtle Decorative Turquoise & Yellow Glow Backdrops */}
@@ -344,6 +378,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     <Download className="w-3.5 h-3.5" />
                     <span className="hidden xs:inline">PDF</span>
                   </button>
+
+                  {/* Edit Button - ONLY visible in Admin Log In Mode */}
+                  {adminUser && onEditYearbook && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditYearbook(yearbook);
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-yellow-400/20 hover:bg-yellow-400 text-yellow-300 hover:text-[#071630] font-bold text-xs rounded-xl border border-yellow-400/60 shadow-sm transition-all cursor-pointer"
+                      title="Edit cover, academic year, title, overview and document info (Admin Mode)"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </article>

@@ -534,6 +534,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           setYearbookToEdit(null);
         }}
         yearbookToEdit={yearbookToEdit}
+        adminUser={adminUser}
       />
 
       {/* Delete Confirmation Modal */}

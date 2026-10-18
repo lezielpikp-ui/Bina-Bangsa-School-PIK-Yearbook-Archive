@@ -20,19 +20,25 @@ import {
   Share2,
   Check,
   Home,
+  Edit3,
 } from 'lucide-react';
-import { Yearbook } from '../types/yearbook';
+import { Yearbook, AdminUser } from '../types/yearbook';
 import { downloadYearbookFile } from '../utils/pdfHelper';
 import { BBSLogo } from './BBSLogo';
+import { PdfPageViewer } from './PdfPageViewer';
 
 interface YearbookViewerModalProps {
   yearbook: Yearbook | null;
   onClose: () => void;
+  onEdit?: (yearbook: Yearbook) => void;
+  adminUser?: AdminUser | null;
 }
 
 export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
   yearbook,
   onClose,
+  onEdit,
+  adminUser,
 }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -40,23 +46,19 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
   const [activeTab, setActiveTab] = useState<'reader' | 'pdf'>('reader');
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Keyboard navigation
+  // Keyboard navigation for closing modal
   useEffect(() => {
     if (!yearbook) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
-      } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
-        handleNextPage();
-      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        handlePrevPage();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [yearbook, onClose]);
 
   if (!yearbook) return null;
 
@@ -192,6 +194,21 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
 
+            {/* Edit Details Button - ONLY available in Admin Log In Mode */}
+            {adminUser && onEdit && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onEdit(yearbook);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0b244d] hover:bg-yellow-400 hover:text-[#071630] text-yellow-300 font-bold text-xs rounded-lg border border-yellow-400/50 transition-colors cursor-pointer"
+                title="Edit cover, academic year, title, overview and document info (Admin Mode)"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Edit Details</span>
+              </button>
+            )}
+
             {/* Return to Main Page Button */}
             <button
               onClick={onClose}
@@ -216,174 +233,14 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
 
         {/* Modal Main Content Area */}
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-          {/* Main Viewer Canvas */}
-          <div className="flex-1 bg-[#030d1d] flex flex-col items-center justify-between p-3 sm:p-6 overflow-hidden relative">
+          {/* Main Viewer Canvas: Renders all pages of uploaded PDF or generated document */}
+          <div className="flex-1 bg-[#030d1d] flex flex-col overflow-hidden relative">
             {activeTab === 'reader' ? (
-              <>
-                {/* Book Page Spread Container */}
-                <div
-                  className="flex-1 w-full max-w-4xl flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
-                  style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'center center' }}
-                >
-                  <div className="w-full max-w-3xl min-h-[440px] bg-white text-slate-900 rounded-xl shadow-2xl border-4 border-cyan-900/60 relative flex flex-col md:flex-row overflow-hidden transition-all">
-                    {/* Left Page (Spine Side) */}
-                    <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-200 bg-gradient-to-r from-slate-100/70 via-white to-white">
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-[#071630] font-serif mb-4">
-                          <span className="font-bold tracking-wider uppercase text-[#071630]">BINA BANGSA SCHOOL</span>
-                          <span className="text-cyan-700 font-semibold">{yearbook.year}</span>
-                        </div>
-
-                        {currentPageIndex === 0 ? (
-                          <div className="flex flex-col items-center justify-center py-6 text-center">
-                            <div className="w-32 h-44 rounded shadow-lg overflow-hidden border-2 border-cyan-600 mb-4 bg-[#071630]">
-                              <img
-                                src={yearbook.coverImageUrl}
-                                alt="Cover thumbnail"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <span className="text-xs uppercase tracking-widest text-cyan-800 font-bold">
-                              Pantai Indah Kapuk • Volume {yearbook.year}
-                            </span>
-                            <h3 className="font-serif text-xl font-bold text-[#071630] mt-1">
-                              {yearbook.title}
-                            </h3>
-                            <p className="text-xs text-slate-600 mt-2 max-w-xs italic font-serif">
-                              "{yearbook.description}"
-                            </p>
-                          </div>
-                        ) : (
-                          <div>
-                            <span className="text-[11px] font-extrabold uppercase tracking-widest text-cyan-800">
-                              {currentPage.section}
-                            </span>
-                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#071630] mt-1 mb-3">
-                              {currentPage.title}
-                            </h3>
-                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line font-sans">
-                              {currentPage.content}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 font-mono">
-                        <span>Page {currentPage.pageNumber || currentPageIndex + 1}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-cyan-800 font-bold">Gloria Dei Vivens Homo</span>
-                      </div>
-                    </div>
-
-                    {/* Right Page (Highlights & Archival Record) */}
-                    <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between bg-gradient-to-l from-slate-100/70 via-white to-white">
-                      <div>
-                        <div className="flex items-center justify-between text-xs text-[#071630] font-serif mb-4">
-                          <span className="font-semibold text-cyan-900">{yearbook.title}</span>
-                          <span className="font-mono text-[10px] text-slate-500">PIK Archive</span>
-                        </div>
-
-                        <div className="bg-cyan-50/90 rounded-lg p-4 border border-cyan-200 text-xs text-slate-800 space-y-2.5">
-                          <div className="font-bold text-[#071630] flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-cyan-700" />
-                            <span>BBS PIK Archival Edition</span>
-                          </div>
-                          <p className="text-slate-600 text-xs leading-normal">
-                            This in-browser reader displays curated highlights from the full {yearbook.pageCount}-page commemorative volume. The certified PDF file includes the complete senior roll, faculty directory, Cambridge results, and campus candids.
-                          </p>
-                          <div className="pt-2">
-                            <button
-                              onClick={() => downloadYearbookFile(yearbook)}
-                              className="text-cyan-800 hover:text-cyan-950 font-bold underline text-xs cursor-pointer inline-flex items-center gap-1"
-                            >
-                              <Download className="w-3 h-3" />
-                              Download full original {yearbook.fileName || 'PDF'}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Interactive highlights */}
-                        <div className="mt-4 space-y-2">
-                          <span className="text-[11px] font-bold text-[#071630] tracking-wider uppercase">
-                            Archive Category Tags
-                          </span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {yearbook.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-2 py-0.5 rounded text-[11px] bg-cyan-100 text-cyan-900 font-semibold"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600 font-mono">
-                        <span className="text-[10px] uppercase text-cyan-800 font-bold">BBS PIK Archives</span>
-                        <span>Page {currentPage.pageNumber ? currentPage.pageNumber + 1 : currentPageIndex + 2}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Navigation Toolbar for Reader */}
-                <div className="w-full max-w-2xl px-4 py-2 bg-[#071630] border border-cyan-800 rounded-xl flex items-center justify-between gap-3 text-xs text-cyan-200 shadow-xl">
-                  {/* Prev Button */}
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={currentPageIndex === 0}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0b244d] hover:bg-cyan-700 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold transition-colors cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span>Previous</span>
-                  </button>
-
-                  {/* Page indicator & slider */}
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs">
-                      Page <strong className="text-yellow-400">{currentPageIndex + 1}</strong> of {totalPagesCount}
-                    </span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={totalPagesCount - 1}
-                      value={currentPageIndex}
-                      onChange={(e) => setCurrentPageIndex(parseInt(e.target.value, 10))}
-                      className="w-24 sm:w-36 accent-yellow-400 cursor-pointer hidden xs:block"
-                    />
-                  </div>
-
-                  {/* Zoom controls */}
-                  <div className="hidden sm:flex items-center gap-1 text-cyan-300">
-                    <button
-                      onClick={() => setZoomLevel((z) => Math.max(z - 10, 70))}
-                      className="p-1 hover:text-white cursor-pointer"
-                      title="Zoom Out"
-                    >
-                      <ZoomOut className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="font-mono text-[11px] w-9 text-center text-white">{zoomLevel}%</span>
-                    <button
-                      onClick={() => setZoomLevel((z) => Math.min(z + 10, 140))}
-                      className="p-1 hover:text-white cursor-pointer"
-                      title="Zoom In"
-                    >
-                      <ZoomIn className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Next Button */}
-                  <button
-                    onClick={handleNextPage}
-                    disabled={currentPageIndex === totalPagesCount - 1}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0b244d] hover:bg-cyan-700 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold transition-colors cursor-pointer"
-                  >
-                    <span>Next</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </>
+              <PdfPageViewer
+                yearbook={yearbook}
+                initialPage={currentPageIndex + 1}
+                onPageChange={(page) => setCurrentPageIndex(page - 1)}
+              />
             ) : (
               /* Raw PDF / Embedded View Mode */
               <div className="w-full h-full flex flex-col items-center justify-center p-4">
@@ -394,7 +251,7 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
                     className="w-full h-full rounded-lg border border-cyan-900"
                   />
                 ) : (
-                  <div className="max-w-md text-center p-8 bg-[#071630] border border-cyan-800 rounded-xl">
+                  <div className="max-w-md text-center p-8 bg-[#071630] border border-cyan-800 rounded-2xl shadow-xl">
                     <div className="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center mb-4">
                       <FileText className="w-8 h-8 text-yellow-400" />
                     </div>
@@ -404,13 +261,22 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
                     <p className="text-xs text-cyan-200/80 mb-6 leading-relaxed">
                       Official Bina Bangsa School-Pantai Indah Kapuk archival publication: <strong className="text-white">{yearbook.fileName}</strong> ({yearbook.fileSize}).
                     </p>
-                    <button
-                      onClick={() => downloadYearbookFile(yearbook)}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold rounded-xl shadow-lg shadow-yellow-400/20 transition-all cursor-pointer"
-                    >
-                      <Download className="w-5 h-5" />
-                      <span>Download Certified PDF ({yearbook.fileSize})</span>
-                    </button>
+                    <div className="flex flex-col gap-2.5">
+                      <button
+                        onClick={() => setActiveTab('reader')}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#0b244d] hover:bg-cyan-700 text-white font-bold rounded-xl border border-cyan-500/40 transition-all cursor-pointer"
+                      >
+                        <BookOpen className="w-4 h-4 text-yellow-400" />
+                        <span>Open in Page Reader</span>
+                      </button>
+                      <button
+                        onClick={() => downloadYearbookFile(yearbook)}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold rounded-xl shadow-lg shadow-yellow-400/20 transition-all cursor-pointer"
+                      >
+                        <Download className="w-5 h-5" />
+                        <span>Download Certified PDF ({yearbook.fileSize})</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -490,7 +356,7 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
             </div>
 
             {/* Bottom download reminder */}
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <button
                 onClick={() => downloadYearbookFile(yearbook)}
                 className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-[#0b244d] hover:bg-cyan-700 text-white border border-cyan-500/40 text-xs font-bold transition-colors cursor-pointer"
@@ -498,6 +364,20 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
                 <Download className="w-4 h-4 text-yellow-400" />
                 <span>Save Offline Copy (.PDF)</span>
               </button>
+
+              {/* Edit Shortcut - ONLY visible in Admin Log In Mode */}
+              {adminUser && onEdit && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onEdit(yearbook);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-yellow-400/15 hover:bg-yellow-400 text-yellow-300 hover:text-[#071630] border border-yellow-400/40 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Edit Record, Cover & Document</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
