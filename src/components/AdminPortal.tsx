@@ -24,6 +24,8 @@ import {
   AlertCircle,
   HelpCircle,
   Layers,
+  Home,
+  ArrowLeft,
 } from 'lucide-react';
 import { AdminUser, Yearbook } from '../types/yearbook';
 import {
@@ -32,6 +34,7 @@ import {
 } from '../services/authService';
 import { AdminYearbookModal } from './AdminYearbookModal';
 import { AdminDeleteConfirmModal } from './AdminDeleteConfirmModal';
+import { BBSLogo } from './BBSLogo';
 
 interface AdminPortalProps {
   adminUser: AdminUser | null;
@@ -127,9 +130,22 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   if (!adminUser) {
     return (
       <div className="max-w-md mx-auto my-12 p-6 sm:p-8 bg-[#071630] border border-cyan-500/40 rounded-3xl shadow-2xl relative">
+        {/* Top Quick Return Button */}
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-cyan-900/60">
+          <button
+            onClick={onReturnToGallery}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#071630] bg-yellow-400 hover:bg-yellow-300 rounded-xl shadow-sm transition-all cursor-pointer"
+            title="Return to Main Page"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>Return to Main Page</span>
+          </button>
+          <span className="text-[11px] text-cyan-300 font-mono font-semibold">BBS PIK Archive</span>
+        </div>
+
         <div className="text-center mb-6">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-yellow-400/15 border border-yellow-400/40 flex items-center justify-center text-yellow-400 mb-4 shadow-lg shadow-yellow-400/10">
-            <Lock className="w-7 h-7 stroke-[2.4]" />
+          <div className="w-16 h-16 mx-auto p-1.5 rounded-2xl bg-white border-2 border-cyan-400/60 flex items-center justify-center mb-4 shadow-xl shadow-cyan-950/40">
+            <BBSLogo size={52} />
           </div>
           <h2 className="font-serif text-2xl font-bold text-white tracking-tight">
             Administrator Access Portal
@@ -151,15 +167,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <p className="text-[11px] text-cyan-200/70">
             Official admin account for Bina Bangsa School Pantai Indah Kapuk:
           </p>
-          <div className="flex items-center justify-between bg-[#071630] px-3 py-2 rounded-xl border border-cyan-700/60 text-[11px] font-mono">
-            <span className="text-white truncate pr-2">{DEFAULT_ADMIN_CONFIG.email}</span>
-            <button
-              type="button"
-              onClick={handleAutofillCredentials}
-              className="text-yellow-400 hover:text-yellow-300 font-bold underline font-sans cursor-pointer text-xs shrink-0"
-            >
-              Fill Credentials
-            </button>
+          <div className="bg-[#071630] p-2.5 rounded-xl border border-cyan-700/60 text-[11px] font-mono space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-cyan-300/80 font-sans text-[10px]">Email:</span>
+              <span className="text-white font-semibold">{DEFAULT_ADMIN_CONFIG.email}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-cyan-300/80 font-sans text-[10px]">Password:</span>
+              <span className="text-yellow-300 font-bold tracking-wide">{DEFAULT_ADMIN_CONFIG.password}</span>
+            </div>
+            <div className="pt-1.5 border-t border-cyan-800/60 flex justify-end">
+              <button
+                type="button"
+                onClick={handleAutofillCredentials}
+                className="text-yellow-400 hover:text-yellow-300 font-bold underline font-sans cursor-pointer text-xs"
+              >
+                Auto-fill Login Credentials
+              </button>
+            </div>
           </div>
         </div>
 
@@ -235,9 +260,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         <div className="mt-6 pt-4 border-t border-cyan-950 text-center flex items-center justify-between text-xs text-cyan-200/80">
           <button
             onClick={onReturnToGallery}
-            className="hover:text-yellow-400 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 font-bold text-yellow-400 hover:text-yellow-300 transition-colors cursor-pointer"
           >
-            ← Return to Public Gallery
+            <Home className="w-3.5 h-3.5" />
+            <span>Return to Main Page</span>
           </button>
           <button
             onClick={onOpenSetupGuide}
@@ -290,10 +316,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
           <button
             onClick={onReturnToGallery}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#0b244d] hover:bg-cyan-700 text-white text-xs sm:text-sm font-bold rounded-xl border border-cyan-500/40 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-[#071630] text-xs sm:text-sm font-extrabold rounded-xl shadow-md shadow-yellow-400/20 border border-yellow-300 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+            title="Return to Main Page"
           >
-            <BookOpen className="w-4 h-4 text-yellow-400" />
-            <span className="hidden sm:inline">View Public Gallery</span>
+            <Home className="w-4 h-4 stroke-[2.5]" />
+            <span>Return to Main Page</span>
           </button>
         </div>
       </div>

@@ -18,13 +18,13 @@ import { AdminUser } from '../types/yearbook';
  * ============================================================================
  */
 
-const ADMIN_SESSION_KEY = 'bbs_pik_admin_session_v2';
-const ADMIN_CREDENTIALS_KEY = 'bbs_pik_admin_creds_v2';
+const ADMIN_SESSION_KEY = 'bbs_pik_admin_session_v3';
+const ADMIN_CREDENTIALS_KEY = 'bbs_pik_admin_creds_v3';
 
 // Default initial admin credentials for BBS Pantai Indah Kapuk
 export const DEFAULT_ADMIN_CONFIG = {
   email: 'admin.pikp@binabangsaschool.com',
-  password: 'BBSAdmin2026!',
+  password: 'Binabangsap1k',
   fullName: 'Principal / Lead Archivist (BBS PIK)',
   role: 'super_admin' as const,
 };
@@ -52,7 +52,16 @@ export function getStoredAdminCredentials(): StoredCredentials {
       localStorage.setItem(ADMIN_CREDENTIALS_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    // If stored creds are using older default password, seamlessly update to the requested default
+    if (
+      parsed.email === DEFAULT_ADMIN_CONFIG.email &&
+      (parsed.passwordHash === 'BBSAdmin2026!' || parsed.passwordHash === 'BBS2026Admin' || !parsed.passwordHash)
+    ) {
+      parsed.passwordHash = DEFAULT_ADMIN_CONFIG.password;
+      localStorage.setItem(ADMIN_CREDENTIALS_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch {
     return {
       email: DEFAULT_ADMIN_CONFIG.email,

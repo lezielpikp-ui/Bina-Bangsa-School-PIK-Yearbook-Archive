@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { BookOpen, ShieldCheck, Lock, LogOut, HelpCircle } from 'lucide-react';
+import React from 'react';
+import { BookOpen, ShieldCheck, Lock, LogOut, HelpCircle, Home } from 'lucide-react';
 import { AdminUser } from '../types/yearbook';
+import { BBSLogo } from './BBSLogo';
 
 interface NavbarProps {
   currentView: 'gallery' | 'admin';
@@ -22,34 +23,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenSetupGuide,
 }) => {
-  const [logoFailed, setLogoFailed] = useState(false);
+
+  const handleReturnToMain = () => {
+    setCurrentView('gallery');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-cyan-950/70 bg-[#071630]/95 backdrop-blur-md shadow-lg shadow-black/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo & School Branding */}
+          {/* Logo & School Branding - clicking returns to main page */}
           <button
-            onClick={() => setCurrentView('gallery')}
+            onClick={handleReturnToMain}
             className="flex items-center gap-3.5 text-left group transition-all cursor-pointer"
+            title="Return to Main Page"
           >
-            {/* Suitable BBS Logo from the user's Google Drive assets */}
-            <div className="h-12 px-3 py-1 bg-white rounded-xl shadow-md shadow-cyan-950/40 flex items-center justify-center border border-cyan-400/30 group-hover:border-cyan-400 transition-all">
-              {!logoFailed ? (
-                <img
-                  src="/logos/bbs_pik_logo.png"
-                  alt="Bina Bangsa School Logo"
-                  className="h-9 w-auto max-w-[150px] object-contain"
-                  onError={() => setLogoFailed(true)}
-                />
-              ) : (
-                <div className="flex items-center gap-1.5 font-bold text-xs text-[#071630] tracking-tight">
-                  <div className="w-6 h-6 rounded-md bg-[#071630] text-[#facc15] flex items-center justify-center font-serif text-xs">
-                    BBS
-                  </div>
-                  <span>PIK</span>
-                </div>
-              )}
+            {/* Official BBS Pictogram Logo uploaded by user */}
+            <div className="w-13 h-13 p-1 bg-white rounded-2xl shadow-md shadow-cyan-950/40 flex items-center justify-center border-2 border-cyan-400/40 group-hover:border-yellow-400 transition-all shrink-0">
+              <BBSLogo size={44} />
             </div>
 
             {/* School Name & Campus descriptor */}
@@ -70,26 +62,36 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Navigation Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Primary Main Page / Return to Main Page Button */}
+            {currentView === 'admin' ? (
+              <button
+                onClick={handleReturnToMain}
+                className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-[#071630] bg-yellow-400 hover:bg-yellow-300 rounded-xl shadow-lg shadow-yellow-400/20 border border-yellow-300 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                title="Return to Main Page (Public Yearbook Gallery)"
+              >
+                <Home className="w-4 h-4 shrink-0 stroke-[2.5]" />
+                <span>Return to Main Page</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleReturnToMain}
+                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-[#0a244b] hover:bg-[#0e2f5c] border border-cyan-400/40 hover:border-yellow-400 rounded-xl transition-all cursor-pointer shadow-sm"
+                title="Main Page (Public Yearbook Gallery)"
+              >
+                <Home className="w-4 h-4 text-yellow-400 shrink-0" />
+                <span>Main Page</span>
+              </button>
+            )}
+
             {/* Setup & Deployment Guide Button */}
             <button
               onClick={onOpenSetupGuide}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-100 hover:text-white bg-[#0b244d] hover:bg-[#0f2e63] border border-cyan-500/30 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-cyan-100 hover:text-white bg-[#0b244d] hover:bg-[#0f2e63] border border-cyan-500/30 rounded-xl transition-colors cursor-pointer"
               title="View Setup & Deployment Instructions"
             >
-              <HelpCircle className="w-4 h-4 text-yellow-400" />
+              <HelpCircle className="w-4 h-4 text-cyan-300" />
               <span className="hidden sm:inline">Setup Guide</span>
             </button>
-
-            {/* View Switcher: Public Gallery vs Admin */}
-            {currentView === 'admin' ? (
-              <button
-                onClick={() => setCurrentView('gallery')}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-white bg-cyan-700 hover:bg-cyan-600 rounded-lg border border-cyan-400/50 transition-colors cursor-pointer"
-              >
-                <BookOpen className="w-4 h-4 text-yellow-300" />
-                <span>Return to Gallery</span>
-              </button>
-            ) : null}
 
             {/* Admin Access Button / Profile Indicator */}
             {adminUser ? (

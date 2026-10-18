@@ -6,7 +6,7 @@
 import { Yearbook } from '../types/yearbook';
 import { generateCoverSvgDataUrl } from '../utils/coverGenerator';
 
-const STORAGE_KEY = 'bbs_pik_yearbook_gallery_records_v2';
+const STORAGE_KEY = 'bbs_pik_yearbook_gallery_records_v3';
 
 /**
  * Pre-populated realistic initial yearbook collection for

@@ -19,9 +19,11 @@ import {
   BookOpen,
   Share2,
   Check,
+  Home,
 } from 'lucide-react';
 import { Yearbook } from '../types/yearbook';
 import { downloadYearbookFile } from '../utils/pdfHelper';
+import { BBSLogo } from './BBSLogo';
 
 interface YearbookViewerModalProps {
   yearbook: Yearbook | null;
@@ -119,6 +121,9 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-cyan-950 bg-[#040e20]">
           <div className="flex items-center gap-3 overflow-hidden">
+            <div className="w-9 h-9 p-0.5 rounded-lg bg-white border border-cyan-400/50 flex items-center justify-center shrink-0 shadow-sm">
+              <BBSLogo size={28} />
+            </div>
             <div className="px-2.5 py-1 rounded-lg bg-yellow-400/15 border border-yellow-400/50 text-yellow-300 font-serif font-extrabold text-xs sm:text-sm whitespace-nowrap">
               {yearbook.year}
             </div>
@@ -187,10 +192,21 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
 
+            {/* Return to Main Page Button */}
+            <button
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0b244d] hover:bg-cyan-700 text-white font-bold text-xs rounded-lg border border-cyan-500/40 hover:border-yellow-400 transition-colors cursor-pointer ml-1"
+              title="Return to Main Page (Esc)"
+            >
+              <Home className="w-3.5 h-3.5 text-yellow-400" />
+              <span className="hidden sm:inline">Return to Main Page</span>
+              <span className="sm:hidden">Main Page</span>
+            </button>
+
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-1.5 text-cyan-300 hover:text-rose-400 hover:bg-[#0b244d] rounded-lg transition-colors cursor-pointer ml-1"
+              className="p-1.5 text-cyan-300 hover:text-rose-400 hover:bg-[#0b244d] rounded-lg transition-colors cursor-pointer"
               title="Close Viewer (Esc)"
             >
               <X className="w-5 h-5" />

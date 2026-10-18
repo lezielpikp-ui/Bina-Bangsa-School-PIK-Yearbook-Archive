@@ -15,8 +15,10 @@ import {
   Copy,
   Check,
   FileCheck,
+  Home,
 } from 'lucide-react';
 import { DEFAULT_ADMIN_CONFIG } from '../services/authService';
+import { BBSLogo } from './BBSLogo';
 
 interface SetupGuideModalProps {
   isOpen: boolean;
@@ -48,8 +50,8 @@ export const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ isOpen, onClos
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-cyan-950 bg-[#040e20]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-yellow-400/15 border border-yellow-400/40 flex items-center justify-center text-yellow-400">
-              <BookOpen className="w-5 h-5" />
+            <div className="w-11 h-11 p-1 rounded-xl bg-white border-2 border-cyan-400/50 flex items-center justify-center shrink-0 shadow-md">
+              <BBSLogo size={34} />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-serif font-bold text-white">
@@ -60,12 +62,23 @@ export const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ isOpen, onClos
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-cyan-300 hover:text-white hover:bg-[#0b244d] rounded-lg transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0b244d] hover:bg-cyan-700 text-white font-bold text-xs rounded-lg border border-cyan-500/40 hover:border-yellow-400 transition-colors cursor-pointer"
+              title="Return to Main Page"
+            >
+              <Home className="w-3.5 h-3.5 text-yellow-400" />
+              <span className="hidden sm:inline">Return to Main Page</span>
+              <span className="sm:hidden">Main Page</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 text-cyan-300 hover:text-white hover:bg-[#0b244d] rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -300,9 +313,10 @@ export const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ isOpen, onClos
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs transition-colors cursor-pointer shadow-md shadow-yellow-400/20"
           >
-            Close Guide
+            <Home className="w-4 h-4 stroke-[2.5]" />
+            <span>Return to Main Page</span>
           </button>
         </div>
       </div>

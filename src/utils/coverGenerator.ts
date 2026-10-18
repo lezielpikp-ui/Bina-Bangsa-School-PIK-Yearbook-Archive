@@ -131,22 +131,47 @@ export function generateCoverSvgDataUrl(
       <path d="M 358 518 L 338 518 M 358 518 L 358 498" />
     </g>
 
-    <!-- School Heraldic Crest / Seal Emblem -->
-    <g transform="translate(200, 150)" opacity="0.98">
-      <!-- Outer Seal Ring -->
-      <circle r="48" fill="none" stroke="url(#bbsFoilGrad)" stroke-width="2.5" />
-      <circle r="43" fill="none" stroke="${scheme.accent}" stroke-width="1.2" stroke-dasharray="2,3" />
-      <circle r="38" fill="${scheme.bg2}" fill-opacity="0.9" stroke="url(#bbsFoilGrad)" stroke-width="1" />
-      
-      <!-- Laurel Leaves -->
-      <path d="M -26 -10 C -34 10, -22 28, 0 34 C 22 28, 34 10, 26 -10" fill="none" stroke="${scheme.foil}" stroke-width="1.8" />
-      <!-- Book & Torch / Rising Wings Symbol -->
-      <path d="M -16 -12 Q 0 -6 16 -12 L 16 12 Q 0 16 -16 12 Z" fill="none" stroke="#ffffff" stroke-width="1.8" />
-      <line x1="0" y1="-8" x2="0" y2="14" stroke="${scheme.accent}" stroke-width="1.8" />
-      <!-- Torch Flame (Vibrant Yellow / Turquoise) -->
-      <path d="M 0 -16 C -3 -24, 0 -29, 0 -31 C 0 -29, 3 -24, 0 -16 Z" fill="${scheme.foil}" />
-      <!-- Star in White -->
-      <polygon points="0,-4 2,-1 5,-1 3,1 4,4 0,2 -4,4 -3,1 -5,-1 -2,-1" fill="#ffffff" transform="translate(0, 0) scale(1.2)" />
+    <!-- Official BBS Pictogram Heraldic Crest Emblem -->
+    <g transform="translate(205, 160) scale(0.24)">
+      <defs>
+        <clipPath id="coverShieldClip">
+          <path d="M -155 -190 L 155 -190 L 155 30 C 155 125, 60 170, 0 190 C -60 170, -155 125, -155 30 Z" />
+        </clipPath>
+      </defs>
+
+      <!-- Shield Background and Cross (Clipped) -->
+      <g clip-path="url(#coverShieldClip)">
+        <!-- Top-Left: Turquoise -->
+        <rect x="-155" y="-190" width="155" height="180" fill="#159899" />
+        <!-- Top-Right: White -->
+        <rect x="0" y="-190" width="155" height="180" fill="#ffffff" />
+        <!-- Bottom-Left: White -->
+        <rect x="-155" y="-10" width="155" height="200" fill="#ffffff" />
+        <!-- Bottom-Right: Turquoise -->
+        <rect x="0" y="-10" width="155" height="200" fill="#159899" />
+
+        <!-- Navy Cross -->
+        <rect x="-155" y="-80" width="310" height="70" fill="#031d3d" />
+        <rect x="-33" y="-190" width="66" height="380" fill="#031d3d" />
+
+        <!-- BBS Typography -->
+        <text x="-70" y="115" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="900" text-anchor="middle" fill="#031d3d">B</text>
+        <text x="0" y="115" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="900" text-anchor="middle" fill="#ffffff">B</text>
+        <text x="66" y="115" font-family="'Playfair Display', Georgia, serif" font-size="105" font-weight="900" text-anchor="middle" fill="#031d3d">S</text>
+
+        <!-- Open Book at Cross Intersection -->
+        <path d="M -2 -105 L -85 -125 L -85 -13 L -2 5 L 2 5 L 85 -13 L 85 -125 L 2 -105 Z" fill="#031d3d" />
+        <path d="M -4 -99 L -76 -119 L -76 -19 L -4 -1 Z" fill="#ffffff" />
+        <path d="M 4 -99 L 76 -119 L 76 -19 L 4 -1 Z" fill="#ffffff" />
+        <line x1="0" y1="-101" x2="0" y2="1" stroke="#031d3d" stroke-width="2.5" />
+
+        <!-- 培 民 Characters -->
+        <text x="-37" y="-41" font-family="'Kaiti', 'STKaiti', 'KaiTi', 'Noto Serif SC', 'SimSun', serif" font-size="34" font-weight="bold" text-anchor="middle" fill="#031d3d">培</text>
+        <text x="37" y="-41" font-family="'Kaiti', 'STKaiti', 'KaiTi', 'Noto Serif SC', 'SimSun', serif" font-size="34" font-weight="bold" text-anchor="middle" fill="#031d3d">民</text>
+      </g>
+
+      <!-- Outer Turquoise Frame -->
+      <path d="M -155 -190 L 155 -190 L 155 30 C 155 125, 60 170, 0 190 C -60 170, -155 125, -155 30 Z" fill="none" stroke="#159899" stroke-width="12" stroke-linejoin="round" />
     </g>
 
     <!-- School Header Text: BINA BANGSA SCHOOL -->

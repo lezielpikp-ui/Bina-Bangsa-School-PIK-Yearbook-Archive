@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Yearbook, SortOption } from '../types/yearbook';
 import { downloadYearbookFile } from '../utils/pdfHelper';
+import { BBSLogo } from './BBSLogo';
 
 interface PublicGalleryProps {
   yearbooks: Yearbook[];
@@ -94,46 +95,56 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -translate-y-1/2"></div>
         <div className="absolute bottom-0 left-10 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none translate-y-1/3"></div>
 
-        <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0d2a54] border border-cyan-400/40 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-            <span>Pantai Indah Kapuk Campus Archives</span>
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div className="max-w-3xl flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0d2a54] border border-cyan-400/40 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
+              <span>Pantai Indah Kapuk Campus Archives</span>
+            </div>
+
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+              Bina Bangsa School <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-cyan-300">
+                Pantai Indah Kapuk
+              </span>
+              <span className="block text-xl sm:text-2xl font-sans font-semibold text-cyan-100 mt-2">
+                Digital Yearbook Collection & Historical Records
+              </span>
+            </h1>
+
+            <p className="mt-4 text-sm sm:text-base text-cyan-100/90 leading-relaxed font-sans max-w-2xl">
+              Welcome to the official public archive for Bina Bangsa School-Pantai Indah Kapuk. Explore, view in-browser, and download commemorative yearbooks honoring the scholars, leaders, artists, and athletes walking in our motto <span className="font-serif italic font-bold text-yellow-300">"Gloria Dei Vivens Homo"</span>.
+            </p>
+
+            {/* Key Stats Bar in Dark Blue, Yellow, and Turquoise */}
+            <div className="mt-6 flex flex-wrap items-center gap-3 sm:gap-6 text-xs text-cyan-200 border-t border-cyan-900/60 pt-5">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-yellow-400" />
+                <span>
+                  <strong className="text-white font-bold">{yearbooks.length}</strong> Volumes Preserved
+                </span>
+              </div>
+              <div className="h-3 w-px bg-cyan-800/80 hidden sm:block"></div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-cyan-300" />
+                <span>
+                  <strong className="text-white font-bold">{totalPagesSum.toLocaleString()}</strong> Archived Pages
+                </span>
+              </div>
+              <div className="h-3 w-px bg-cyan-800/80 hidden sm:block"></div>
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-yellow-400" />
+                <span>100% Free Public Viewing & Download</span>
+              </div>
+            </div>
           </div>
 
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Bina Bangsa School <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-400 to-cyan-300">
-              Pantai Indah Kapuk
+          {/* Large BBS Pictogram Shield Crest */}
+          <div className="hidden lg:flex flex-col items-center justify-center p-4 bg-white/95 rounded-3xl shadow-2xl border-4 border-cyan-400/50 shadow-cyan-950/60 shrink-0">
+            <BBSLogo size={135} />
+            <span className="text-[10px] font-bold tracking-widest text-[#071630] uppercase mt-2">
+              EST. 2001
             </span>
-            <span className="block text-xl sm:text-2xl font-sans font-semibold text-cyan-100 mt-2">
-              Digital Yearbook Collection & Historical Records
-            </span>
-          </h1>
-
-          <p className="mt-4 text-sm sm:text-base text-cyan-100/90 leading-relaxed font-sans max-w-2xl">
-            Welcome to the official public archive for Bina Bangsa School-Pantai Indah Kapuk. Explore, view in-browser, and download commemorative yearbooks honoring the scholars, leaders, artists, and athletes walking in our motto <span className="font-serif italic font-bold text-yellow-300">"Gloria Dei Vivens Homo"</span>.
-          </p>
-
-          {/* Key Stats Bar in Dark Blue, Yellow, and Turquoise */}
-          <div className="mt-6 flex flex-wrap items-center gap-3 sm:gap-6 text-xs text-cyan-200 border-t border-cyan-900/60 pt-5">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-yellow-400" />
-              <span>
-                <strong className="text-white font-bold">{yearbooks.length}</strong> Volumes Preserved
-              </span>
-            </div>
-            <div className="h-3 w-px bg-cyan-800/80 hidden sm:block"></div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-cyan-300" />
-              <span>
-                <strong className="text-white font-bold">{totalPagesSum.toLocaleString()}</strong> Archived Pages
-              </span>
-            </div>
-            <div className="h-3 w-px bg-cyan-800/80 hidden sm:block"></div>
-            <div className="flex items-center gap-2">
-              <FileCheck className="w-4 h-4 text-yellow-400" />
-              <span>100% Free Public Viewing & Download</span>
-            </div>
           </div>
         </div>
       </section>

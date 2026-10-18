@@ -21,6 +21,7 @@ import {
   logoutAdmin,
 } from './services/authService';
 import { CheckCircle2, Info, Shield } from 'lucide-react';
+import { BBSLogo } from './components/BBSLogo';
 
 export default function App() {
   const [yearbooks, setYearbooks] = useState<Yearbook[]>(() => getAllYearbooks());
@@ -145,15 +146,8 @@ export default function App() {
       <footer className="border-t border-cyan-950/80 bg-[#030a17] py-10 text-xs text-cyan-200/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-9 px-2 bg-white rounded-lg flex items-center justify-center border border-cyan-400/40">
-              <img
-                src="/logos/bbs_pik_logo.png"
-                alt="BBS PIK"
-                className="h-7 w-auto object-contain"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
+            <div className="w-10 h-10 p-0.5 bg-white rounded-xl flex items-center justify-center border-2 border-cyan-400/50 shadow-md shrink-0">
+              <BBSLogo size={34} />
             </div>
             <div>
               <p className="font-serif font-bold text-white text-sm">
