@@ -193,11 +193,11 @@ export const AdminYearbookModal: React.FC<AdminYearbookModalProps> = ({
       // Read file buffer for PDF rendering
       const arrayBuffer = await file.arrayBuffer();
 
-      // Persist full uploaded PDF to IndexedDB store so all pages are viewable in the page reader
-      await savePdfFile(currentRecordId, arrayBuffer, file.name);
+      // Persist full uploaded PDF to IndexedDB store with buffer detachment protection
+      await savePdfFile(currentRecordId, arrayBuffer.slice(0), file.name);
 
-      // Extract first page as high-res cover image and detect real page count
-      const extracted = await extractFirstPageAndMetadata(arrayBuffer);
+      // Extract first page as high-res cover image and detect real page count using safe copy
+      const extracted = await extractFirstPageAndMetadata(arrayBuffer.slice(0));
 
       if (extracted.firstPageImageDataUrl) {
         // Automatically sync cover with Page 1 of the uploaded document!

@@ -48,8 +48,9 @@ export async function savePdfFile(
     arrayBuffer = data;
   }
 
-  // Update in-memory cache immediately
-  memoryCache.set(id, arrayBuffer);
+  // Update in-memory cache with safe clone
+  const cacheCopy = arrayBuffer.slice(0);
+  memoryCache.set(id, cacheCopy);
 
   try {
     const db = await openDatabase();
@@ -60,7 +61,7 @@ export async function savePdfFile(
       const record = {
         id,
         fileName,
-        data: arrayBuffer,
+        data: arrayBuffer.slice(0),
         size: arrayBuffer.byteLength,
         savedAt: new Date().toISOString(),
       };
@@ -80,7 +81,8 @@ export async function savePdfFile(
 export async function getPdfFile(id: string): Promise<ArrayBuffer | null> {
   // Check in-memory cache first for instant retrieval
   if (memoryCache.has(id)) {
-    return memoryCache.get(id)!;
+    const buf = memoryCache.get(id)!;
+    return buf.slice(0);
   }
 
   try {
@@ -93,8 +95,8 @@ export async function getPdfFile(id: string): Promise<ArrayBuffer | null> {
       request.onsuccess = () => {
         if (request.result && request.result.data) {
           const buffer = request.result.data as ArrayBuffer;
-          memoryCache.set(id, buffer);
-          resolve(buffer);
+          memoryCache.set(id, buffer.slice(0));
+          resolve(buffer.slice(0));
         } else {
           resolve(null);
         }

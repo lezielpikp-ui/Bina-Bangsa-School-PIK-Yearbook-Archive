@@ -117,8 +117,8 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-[#030d1d]/85 backdrop-blur-md overflow-hidden"
     >
       <div
-        className={`relative w-full max-w-[96vw] xl:max-w-7xl bg-[#071630] border border-cyan-500/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
-          isFullscreen ? 'fixed inset-0 max-w-none rounded-none' : 'max-h-[94vh] h-[880px]'
+        className={`relative w-full max-w-[98vw] xl:max-w-[96vw] bg-[#071630] border border-cyan-500/40 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
+          isFullscreen ? 'fixed inset-0 max-w-none rounded-none z-50' : 'h-[92vh] max-h-[95vh]'
         }`}
       >
         {/* Top Header Bar */}

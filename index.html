@@ -12,6 +12,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script>
+      // Universal polyfills for PDF.js 6+ compatibility across Vercel & modern browsers
+      if (typeof Promise.try !== 'function') {
+        Promise.try = function (fn, ...args) {
+          return new Promise(function (resolve) {
+            resolve(fn(...args));
+          });
+        };
+      }
+      if (!Uint8Array.prototype.toHex) {
+        Uint8Array.prototype.toHex = function () {
+          return Array.from(this, function (byte) {
+            return byte.toString(16).padStart(2, '0');
+          }).join('');
+        };
+      }
+    </script>
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950">
     <div id="root"></div>

@@ -8,8 +8,24 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { YearbookSamplePage } from '../types/yearbook';
 
+// Polyfills for PDF.js compatibility across Vercel & modern browsers
+if (typeof (Promise as any).try !== 'function') {
+  (Promise as any).try = function (fn: (...args: unknown[]) => unknown, ...args: unknown[]) {
+    return new Promise((resolve) => resolve(fn(...args)));
+  };
+}
+if (!(Uint8Array.prototype as any).toHex) {
+  (Uint8Array.prototype as any).toHex = function () {
+    return Array.from(this, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
+  };
+}
+
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+  } catch {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@6.4.299/build/pdf.worker.min.mjs';
+  }
 }
 
 export interface ExtractedPdfData {
@@ -20,26 +36,48 @@ export interface ExtractedPdfData {
 }
 
 /**
- * Loads a PDFDocumentProxy from various input sources (Uint8Array, ArrayBuffer, Blob, or URL/dataURL)
+ * Loads a PDFDocumentProxy from various input sources with full buffer protection and fallback
  */
 export async function loadPdfDocument(
   source: Uint8Array | ArrayBuffer | Blob | string
 ): Promise<pdfjsLib.PDFDocumentProxy> {
   if (source instanceof Blob) {
-    const arrayBuffer = await source.arrayBuffer();
-    return pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    try {
+      const arrayBuffer = await source.arrayBuffer();
+      // Safe clone to prevent detachment
+      const cleanCopy = new Uint8Array(arrayBuffer.slice(0));
+      return await pdfjsLib.getDocument({ data: cleanCopy }).promise;
+    } catch (err) {
+      console.warn('Direct Blob ArrayBuffer parse notice, falling back to Blob URL:', err);
+      const blobUrl = URL.createObjectURL(source);
+      return await pdfjsLib.getDocument({ url: blobUrl }).promise;
+    }
   }
+
   if (typeof source === 'string') {
     if (source.startsWith('data:')) {
       const response = await fetch(source);
       const blob = await response.blob();
       const arrayBuffer = await blob.arrayBuffer();
-      return pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+      const cleanCopy = new Uint8Array(arrayBuffer.slice(0));
+      return await pdfjsLib.getDocument({ data: cleanCopy }).promise;
     }
-    return pdfjsLib.getDocument(source).promise;
+    return await pdfjsLib.getDocument({ url: source }).promise;
   }
-  const uint8Data = source instanceof Uint8Array ? source : new Uint8Array(source);
-  return pdfjsLib.getDocument({ data: uint8Data }).promise;
+
+  // Uint8Array or ArrayBuffer: ALWAYS create a pristine slice
+  const uint8Data = source instanceof Uint8Array
+    ? source.slice(0)
+    : new Uint8Array(source.slice(0));
+
+  try {
+    return await pdfjsLib.getDocument({ data: uint8Data }).promise;
+  } catch (dataErr) {
+    console.warn('Direct buffer load issue, attempting Blob URL wrapper:', dataErr);
+    const blob = new Blob([uint8Data], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    return await pdfjsLib.getDocument({ url: blobUrl }).promise;
+  }
 }
 
 /**
@@ -83,13 +121,20 @@ export async function renderPdfPageToCanvas(
 export async function extractFirstPageAndMetadata(
   data: ArrayBuffer | Uint8Array
 ): Promise<ExtractedPdfData> {
-  const uint8Data = data instanceof Uint8Array ? data : new Uint8Array(data);
+  // CRITICAL: Clone buffer so Web Worker transfer never detaches the original data
+  const uint8Data = data instanceof Uint8Array ? data.slice(0) : new Uint8Array(data.slice(0));
 
-  const loadingTask = pdfjsLib.getDocument({
-    data: uint8Data,
-  });
-
-  const pdf = await loadingTask.promise;
+  let pdf: pdfjsLib.PDFDocumentProxy;
+  try {
+    const loadingTask = pdfjsLib.getDocument({ data: uint8Data });
+    pdf = await loadingTask.promise;
+  } catch (err) {
+    console.warn('Direct data extraction notice, attempting Blob fallback:', err);
+    const blob = new Blob([uint8Data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const loadingTask = pdfjsLib.getDocument({ url });
+    pdf = await loadingTask.promise;
+  }
   const pageCount = pdf.numPages || 1;
 
   // Retrieve page 1 for cover

@@ -160,7 +160,7 @@ export const PdfPageReader: React.FC<PdfPageReaderProps> = ({
       for (let p = 1; p <= count; p++) {
         if (!isMounted) break;
         try {
-          const page = await pdfDoc.getPage(p);
+          const page = await pdfDoc!.getPage(p);
           const vp = page.getViewport({ scale: 0.25 });
           const c = document.createElement('canvas');
           c.width = vp.width;

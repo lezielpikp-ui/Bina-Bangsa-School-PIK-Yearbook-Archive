@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-cyan-950/70 bg-[#071630]/95 backdrop-blur-md shadow-lg shadow-black/40">
+    <header className="sticky top-0 z-50 w-full border-b border-cyan-950/70 bg-[#071630]/95 backdrop-blur-md shadow-lg shadow-black/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo & School Branding - clicking returns to main page */}
@@ -50,7 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-serif font-bold text-base sm:text-lg lg:text-xl tracking-tight text-white group-hover:text-yellow-400 transition-colors">
                   Bina Bangsa School-Pantai Indah Kapuk
                 </span>
-                <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-[#0a2347] text-cyan-300 border border-cyan-400/40 hidden md:inline-block">
+                <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-[#0a2347] text-cyan-300 border border-cyan-400/40 hidden sm:inline-block">
                   BBS PIK
                 </span>
               </div>
@@ -95,15 +95,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Admin Access Button / Profile Indicator */}
             {adminUser ? (
-              <div className="flex items-center gap-2 bg-[#0a244b] border border-yellow-400/40 rounded-lg px-2.5 py-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-[#0a244b] border border-yellow-400/40 rounded-lg px-2 sm:px-2.5 py-1">
                 <button
                   onClick={() => setCurrentView('admin')}
                   className="flex items-center gap-1.5 text-xs font-semibold text-yellow-300 hover:text-yellow-200 transition-colors cursor-pointer"
+                  title="Open Admin Dashboard"
                 >
                   <ShieldCheck className="w-4 h-4 text-yellow-400" />
-                  <span className="hidden md:inline">Admin Dashboard</span>
+                  <span className="inline">Admin Dashboard</span>
                 </button>
-                <div className="h-4 w-px bg-yellow-400/30 mx-1"></div>
+                <div className="h-4 w-px bg-yellow-400/30 mx-0.5 sm:mx-1"></div>
                 <button
                   onClick={onLogout}
                   className="text-cyan-200 hover:text-rose-400 p-1 transition-colors cursor-pointer"

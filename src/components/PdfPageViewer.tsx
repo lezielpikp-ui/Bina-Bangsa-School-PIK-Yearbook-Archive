@@ -29,9 +29,25 @@ import { Yearbook } from '../types/yearbook';
 import { getPdfFile } from '../services/pdfStore';
 import { generateYearbookPdfBlob, downloadYearbookFile } from '../utils/pdfHelper';
 
-// Configure worker
+// Polyfills for PDF.js compatibility across Vercel & modern browsers
+if (typeof (Promise as any).try !== 'function') {
+  (Promise as any).try = function (fn: (...args: unknown[]) => unknown, ...args: unknown[]) {
+    return new Promise((resolve) => resolve(fn(...args)));
+  };
+}
+if (!(Uint8Array.prototype as any).toHex) {
+  (Uint8Array.prototype as any).toHex = function () {
+    return Array.from(this, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
+  };
+}
+
+// Configure worker with Vite URL & CDN fallback
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+  } catch {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@6.4.299/build/pdf.worker.min.mjs';
+  }
 }
 
 interface PdfPageViewerProps {
@@ -178,17 +194,18 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
       if (pageNumber < 1 || pageNumber > pdfDoc.numPages) return;
 
       const page = await pdfDoc.getPage(pageNumber);
-      const baseScale = 1.25 * (scaleMultiplier / 100);
+      const baseScale = 1.6;
       const viewport = page.getViewport({ scale: baseScale });
 
       const context = canvas.getContext('2d');
       if (!context) return;
 
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(viewport.width * dpr);
       canvas.height = Math.floor(viewport.height * dpr);
-      canvas.style.width = `${Math.floor(viewport.width)}px`;
-      canvas.style.height = `${Math.floor(viewport.height)}px`;
+      // Fluid responsive display size - respects aspect ratio & container height
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
 
       context.save();
       context.scale(dpr, dpr);
@@ -598,65 +615,98 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
             <>
               {viewMode === 'single' || currentPage === 1 ? (
                 <div
-                  className="relative transition-transform duration-200 flex flex-col items-center max-w-full"
+                  className="relative transition-all duration-300 flex flex-col items-center max-w-full"
                   style={{
+                    transform: `scale(${zoomLevel / 100})`,
                     transformOrigin: 'center center',
                   }}
                 >
-                  {/* Album Cover Container with Realistic Hardcover Drop Shadow */}
-                  <div className="bg-white rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] border-2 border-yellow-400/40 overflow-hidden relative group">
-                    <canvas ref={singleCanvasRef} className="block max-w-full h-auto cursor-pointer" onClick={handleNext} title="Click to open album" />
-                    {/* Subtle book spine shadow on left edge */}
-                    <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/60 to-transparent pointer-events-none" />
+                  {/* Album Cover Container with Realistic Hardcover Drop Shadow & Click-to-open */}
+                  <div
+                    onClick={handleNext}
+                    className="bg-white rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] border-2 border-yellow-400/50 overflow-hidden relative cursor-pointer group hover:ring-2 hover:ring-yellow-400 transition-all max-h-[calc(88vh-200px)] flex items-center justify-center"
+                    title="Click cover to open album (turn page)"
+                  >
+                    <canvas ref={singleCanvasRef} className="block max-h-[calc(88vh-210px)] w-auto max-w-full object-contain" />
+                    {/* Hardcover album left spine shadow crease */}
+                    <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/70 via-black/30 to-transparent pointer-events-none" />
+                    {/* Subtle corner sheen */}
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/20 to-transparent pointer-events-none" />
+                    {/* Floating prompt overlay on hover */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                      <div className="px-4 py-2 rounded-xl bg-[#071630]/95 text-yellow-300 font-bold text-xs border border-yellow-400 flex items-center gap-2 shadow-2xl backdrop-blur-sm">
+                        <BookOpen className="w-4 h-4" />
+                        <span>Click to Open Album Spread</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="text-xs font-mono text-cyan-200 font-semibold px-2.5 py-1 rounded-md bg-[#071630] border border-cyan-800">
-                      Page {currentPage} of {totalPages} {currentPage === 1 ? '• Album Cover' : ''}
+                  <div className="flex items-center gap-3 mt-4">
+                    <span className="text-xs font-mono text-cyan-200 font-semibold px-3 py-1 rounded-lg bg-[#071630] border border-cyan-800 shadow">
+                      Page 1 of {totalPages} • Hardcover Album Front
                     </span>
-                    {currentPage === 1 && totalPages > 1 && (
+                    {totalPages > 1 && (
                       <button
                         onClick={handleNext}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs shadow-md shadow-yellow-400/20 cursor-pointer transition-transform hover:scale-105"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs shadow-lg shadow-yellow-400/30 cursor-pointer transition-all hover:scale-105 active:scale-95"
                       >
-                        <BookOpen className="w-3.5 h-3.5" />
+                        <BookOpen className="w-4 h-4" />
                         <span>Open Album (Turn Page)</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     )}
                   </div>
                 </div>
               ) : (
                 /* Two-Page Open Album Spread Mode */
-                <div className="flex flex-col items-center max-w-full">
-                  <div className="flex items-center justify-center shadow-[0_30px_70px_rgba(0,0,0,0.9)] rounded-2xl overflow-hidden border-2 border-cyan-700/60 bg-[#061733] p-1.5 sm:p-2.5">
-                    {/* Left Page (Even Page) - Click turns left/prev */}
+                <div
+                  className="relative transition-all duration-300 flex flex-col items-center max-w-full"
+                  style={{
+                    transform: `scale(${zoomLevel / 100})`,
+                    transformOrigin: 'center center',
+                  }}
+                >
+                  {/* The Realistic Open Album with Central Binding Gutter Crease & Authentic Page Shadows */}
+                  <div className="flex items-stretch justify-center shadow-[0_30px_80px_rgba(0,0,0,0.95)] rounded-2xl overflow-hidden border-2 border-cyan-700/60 bg-[#05142b] p-2 sm:p-3 relative max-w-[96vw] max-h-[calc(88vh-180px)]">
+                    {/* Left Page (Even Page) - Click turns left/backward */}
                     <div
                       onClick={handlePrev}
-                      className="bg-white relative border-r border-slate-300 cursor-pointer group"
-                      title="Click left page to flip back"
+                      className="bg-white relative flex-1 flex items-center justify-center cursor-pointer group overflow-hidden max-h-[calc(88vh-200px)] max-w-[48vw]"
+                      title="Click left page to flip backward"
                     >
-                      <canvas ref={leftCanvasRef} className="block max-w-full h-auto" />
-                      {/* Spine shadow right edge */}
-                      <div className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-black/40 via-black/15 to-transparent pointer-events-none" />
-                      {/* Hover page turn indicator */}
-                      <div className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-80 transition-opacity pointer-events-none">
-                        <ChevronLeft className="w-5 h-5" />
+                      <canvas ref={leftCanvasRef} className="block max-h-[calc(88vh-205px)] w-auto max-w-full object-contain" />
+                      {/* Central binding gutter crease shadow on right edge of left page */}
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/55 via-black/25 to-transparent pointer-events-none" />
+                      {/* Page number pill on bottom left */}
+                      <div className="absolute left-3 bottom-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-mono font-bold opacity-70 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Page {currentPage % 2 === 0 ? currentPage : currentPage - 1}
+                      </div>
+                      {/* Hover turn indicator */}
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg backdrop-blur-sm border border-yellow-400/40">
+                        <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                       </div>
                     </div>
 
-                    {/* Right Page (Odd Page) - Click turns right/next */}
+                    {/* Center Spine Divider crease */}
+                    <div className="w-[3px] bg-gradient-to-b from-slate-700 via-slate-900 to-slate-700 shadow-inner z-10 shrink-0" />
+
+                    {/* Right Page (Odd Page) - Click turns right/forward */}
                     <div
                       onClick={handleNext}
-                      className="bg-white relative cursor-pointer group"
-                      title="Click right page to turn next"
+                      className="bg-white relative flex-1 flex items-center justify-center cursor-pointer group overflow-hidden max-h-[calc(88vh-200px)] max-w-[48vw]"
+                      title="Click right page to turn forward"
                     >
-                      <canvas ref={rightCanvasRef} className="block max-w-full h-auto" />
-                      {/* Spine shadow left edge */}
-                      <div className="absolute left-0 top-0 bottom-0 w-5 bg-gradient-to-r from-black/40 via-black/15 to-transparent pointer-events-none" />
-                      {/* Hover page turn indicator */}
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-80 transition-opacity pointer-events-none">
-                        <ChevronRight className="w-5 h-5" />
+                      <canvas ref={rightCanvasRef} className="block max-h-[calc(88vh-205px)] w-auto max-w-full object-contain" />
+                      {/* Central binding gutter crease shadow on left edge of right page */}
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/55 via-black/25 to-transparent pointer-events-none" />
+                      {/* Page number pill on bottom right */}
+                      <div className="absolute right-3 bottom-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-mono font-bold opacity-70 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Page {Math.min((currentPage % 2 === 0 ? currentPage : currentPage - 1) + 1, totalPages)}
+                      </div>
+                      {/* Hover turn indicator */}
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg backdrop-blur-sm border border-yellow-400/40">
+                        <ChevronRight className="w-5 h-5 stroke-[2.5]" />
                       </div>
                     </div>
                   </div>
@@ -664,12 +714,21 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                   {/* Album Spread Navigation & Page Indicator */}
                   <div className="flex items-center gap-3 mt-3">
                     <button
+                      onClick={() => goToPage(1)}
+                      className="px-2.5 py-1 text-xs font-bold text-cyan-200 hover:text-white bg-[#071630] border border-cyan-800 hover:border-cyan-500 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm"
+                      title="Return to Cover"
+                    >
+                      <ChevronsLeft className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Cover</span>
+                    </button>
+
+                    <button
                       onClick={handlePrev}
                       disabled={currentPage <= 1}
-                      className="px-2.5 py-1 text-xs font-bold text-cyan-200 hover:text-white bg-[#071630] disabled:opacity-30 border border-cyan-800 hover:border-cyan-500 rounded-lg cursor-pointer transition-colors flex items-center gap-1"
+                      className="px-3 py-1 text-xs font-bold text-cyan-200 hover:text-white bg-[#071630] disabled:opacity-30 border border-cyan-800 hover:border-cyan-500 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
-                      <span>Prev Pages</span>
+                      <span>Prev Spread</span>
                     </button>
 
                     <span className="text-xs font-mono text-yellow-300 font-bold px-3 py-1 rounded-md bg-[#071630] border border-yellow-400/50 shadow-sm">
@@ -680,9 +739,9 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                     <button
                       onClick={handleNext}
                       disabled={currentPage >= totalPages}
-                      className="px-2.5 py-1 text-xs font-bold text-[#071630] bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm"
+                      className="px-3 py-1 text-xs font-bold text-[#071630] bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-sm"
                     >
-                      <span>Next Pages</span>
+                      <span>Next Spread</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
