@@ -13,7 +13,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
     <script>
-      // Universal polyfills for PDF.js 6+ compatibility across Vercel & modern browsers
+      // Universal polyfills for PDF.js compatibility across Vercel & modern browsers
+      if (typeof Promise.withResolvers !== 'function') {
+        Promise.withResolvers = function () {
+          var resolve, reject;
+          var promise = new Promise(function (res, rej) {
+            resolve = res;
+            reject = rej;
+          });
+          return { promise: promise, resolve: resolve, reject: reject };
+        };
+      }
       if (typeof Promise.try !== 'function') {
         Promise.try = function (fn, ...args) {
           return new Promise(function (resolve) {

@@ -9,6 +9,16 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { YearbookSamplePage } from '../types/yearbook';
 
 // Polyfills for PDF.js compatibility across Vercel & modern browsers
+if (typeof (Promise as any).withResolvers !== 'function') {
+  (Promise as any).withResolvers = function () {
+    let resolve: any, reject: any;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
 if (typeof (Promise as any).try !== 'function') {
   (Promise as any).try = function (fn: (...args: unknown[]) => unknown, ...args: unknown[]) {
     return new Promise((resolve) => resolve(fn(...args)));
@@ -22,9 +32,9 @@ if (!(Uint8Array.prototype as any).toHex) {
 
 if (typeof window !== 'undefined') {
   try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || '/pdf.worker.min.mjs';
   } catch {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
   }
 }
 

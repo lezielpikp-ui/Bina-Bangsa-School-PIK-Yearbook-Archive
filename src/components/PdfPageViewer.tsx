@@ -30,6 +30,16 @@ import { getPdfFile } from '../services/pdfStore';
 import { generateYearbookPdfBlob, downloadYearbookFile } from '../utils/pdfHelper';
 
 // Polyfills for PDF.js compatibility across Vercel & modern browsers
+if (typeof (Promise as any).withResolvers !== 'function') {
+  (Promise as any).withResolvers = function () {
+    let resolve: any, reject: any;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
 if (typeof (Promise as any).try !== 'function') {
   (Promise as any).try = function (fn: (...args: unknown[]) => unknown, ...args: unknown[]) {
     return new Promise((resolve) => resolve(fn(...args)));
@@ -41,12 +51,12 @@ if (!(Uint8Array.prototype as any).toHex) {
   };
 }
 
-// Configure worker with Vite URL & CDN fallback
+// Configure worker with Vite URL & static /pdf.worker.min.mjs fallback
 if (typeof window !== 'undefined') {
   try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || '/pdf.worker.min.mjs';
   } catch {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
   }
 }
 
@@ -194,7 +204,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
       if (pageNumber < 1 || pageNumber > pdfDoc.numPages) return;
 
       const page = await pdfDoc.getPage(pageNumber);
-      const baseScale = 1.6;
+      const baseScale = 1.6 * (scaleMultiplier / 100);
       const viewport = page.getViewport({ scale: baseScale });
 
       const context = canvas.getContext('2d');
