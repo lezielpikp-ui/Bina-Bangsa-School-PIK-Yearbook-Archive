@@ -207,7 +207,7 @@ export const SetupGuideModal: React.FC<SetupGuideModalProps> = ({ isOpen, onClos
                 <div className="p-4 rounded-xl bg-[#030d1d] border border-cyan-900 space-y-2">
                   <span className="font-bold text-white block">1. Local Prototype Mode (Current Default)</span>
                   <p className="text-cyan-200/80 leading-relaxed">
-                    Yearbook metadata is stored in browser <code className="text-yellow-300">localStorage</code>. When downloading files, the built-in standards-compliant PDF synthesizer generates authentic, certified PDFs with table of contents and graduation metadata. Uploaded files under 5MB are stored locally; larger files record metadata while offering standard PDF generation for downloads.
+                    Yearbook metadata is stored in browser <code className="text-yellow-300">localStorage</code> while uploaded PDF documents up to <strong className="text-white">300 MB</strong> are stored directly in high-capacity browser <code className="text-yellow-300">IndexedDB</code>. When downloading or viewing files, authentic documents are retrieved directly with realistic two-page spread rendering and complete page navigation.
                   </p>
                 </div>
 

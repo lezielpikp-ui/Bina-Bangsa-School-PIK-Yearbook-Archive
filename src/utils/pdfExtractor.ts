@@ -22,9 +22,9 @@ if (!(Uint8Array.prototype as any).toHex) {
 
 if (typeof window !== 'undefined') {
   try {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker || 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
   } catch {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@6.4.299/build/pdf.worker.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
   }
 }
 

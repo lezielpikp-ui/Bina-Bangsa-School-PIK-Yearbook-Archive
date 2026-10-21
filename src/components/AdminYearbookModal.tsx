@@ -163,10 +163,10 @@ export const AdminYearbookModal: React.FC<AdminYearbookModalProps> = ({
       return;
     }
 
-    // Safety limit 120MB
-    const maxBytes = 120 * 1024 * 1024;
+    // Safety limit 300MB
+    const maxBytes = 300 * 1024 * 1024;
     if (file.size > maxBytes) {
-      setError('File exceeds maximum allowed limit of 120 MB. Please compress the PDF before uploading.');
+      setError('File exceeds maximum allowed limit of 300 MB. Please compress the PDF before uploading.');
       return;
     }
 
@@ -562,7 +562,7 @@ export const AdminYearbookModal: React.FC<AdminYearbookModalProps> = ({
                       <span className="text-[11px] text-cyan-300 mt-0.5">
                         {fileName
                           ? `${fileSize} • Uploaded (First page automatically synced with cover)`
-                          : 'Upload official Bina Bangsa School digital yearbook (.pdf, up to 120MB)'}
+                          : 'Upload official Bina Bangsa School digital yearbook (.pdf, up to 300MB)'}
                       </span>
                       {firstPageCoverUrl && (
                         <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 text-[10px] font-bold">
