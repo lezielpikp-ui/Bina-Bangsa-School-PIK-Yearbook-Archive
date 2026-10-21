@@ -24,6 +24,8 @@ import {
   Square,
   AlertCircle,
   Download,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { Yearbook } from '../types/yearbook';
 import { getPdfFile } from '../services/pdfStore';
@@ -60,6 +62,60 @@ if (typeof window !== 'undefined') {
   }
 }
 
+// Synthesize realistic paper rustle sound via Web Audio API without external audio files
+function playPageRustleSound() {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const sampleRate = ctx.sampleRate;
+    const duration = 0.14; // 140ms crisp realistic paper rustle
+    const frameCount = Math.floor(sampleRate * duration);
+    const buffer = ctx.createBuffer(1, frameCount, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < frameCount; i++) {
+      const progress = i / frameCount;
+      const env = progress < 0.12
+        ? progress / 0.12
+        : Math.pow(1 - (progress - 0.12) / 0.88, 2.2);
+      const noise = (Math.random() * 2 - 1) * 0.16;
+      data[i] = noise * env;
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1400, ctx.currentTime);
+    filter.Q.setValueAtTime(1.1, ctx.currentTime);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + duration);
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    source.start();
+    source.onended = () => {
+      try {
+        ctx.close().catch(() => {});
+      } catch {
+        // Ignored
+      }
+    };
+  } catch {
+    // Audio optional / graceful fallback
+  }
+}
+
 interface PdfPageViewerProps {
   yearbook: Yearbook;
   initialPage?: number;
@@ -82,6 +138,55 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [sourceType, setSourceType] = useState<'uploaded' | 'url' | 'generated'>('uploaded');
+
+  // Page flip 3D animation states
+  const [isFlipping, setIsFlipping] = useState<boolean>(false);
+  const [flipDirection, setFlipDirection] = useState<'next' | 'prev' | null>(null);
+  const [flipSnapshot, setFlipSnapshot] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const flipTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Helper to capture a snapshot of a canvas safely for 3D flip animation
+  const captureCanvas = useCallback((canvas: HTMLCanvasElement | null): string | null => {
+    if (!canvas) return null;
+    try {
+      return canvas.toDataURL('image/jpeg', 0.85);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const triggerFlipAnimation = useCallback(
+    (direction: 'next' | 'prev', snapshot: string | null) => {
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if (soundEnabled) {
+        playPageRustleSound();
+      }
+
+      if (prefersReducedMotion || !snapshot) {
+        return;
+      }
+
+      if (flipTimerRef.current) {
+        clearTimeout(flipTimerRef.current);
+      }
+
+      setIsFlipping(true);
+      setFlipDirection(direction);
+      setFlipSnapshot(snapshot);
+
+      flipTimerRef.current = setTimeout(() => {
+        setIsFlipping(false);
+        setFlipDirection(null);
+        setFlipSnapshot(null);
+        flipTimerRef.current = null;
+      }, 530);
+    },
+    [soundEnabled]
+  );
 
   // Canvas refs for main display
   const singleCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -316,14 +421,24 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
     if (!pdfDoc) return;
     if (viewMode === 'spread') {
       if (currentPage === 1) {
+        const snapshot = captureCanvas(singleCanvasRef.current);
+        triggerFlipAnimation('next', snapshot);
         goToPage(2);
       } else {
         const currentLeft = currentPage % 2 === 0 ? currentPage : currentPage - 1;
         const nextLeft = currentLeft + 2;
-        goToPage(Math.min(nextLeft, totalPages));
+        if (currentLeft + 1 < totalPages) {
+          const snapshot = captureCanvas(rightCanvasRef.current);
+          triggerFlipAnimation('next', snapshot);
+          goToPage(Math.min(nextLeft, totalPages));
+        }
       }
     } else {
-      goToPage(Math.min(currentPage + 1, totalPages));
+      if (currentPage < totalPages) {
+        const snapshot = captureCanvas(singleCanvasRef.current);
+        triggerFlipAnimation('next', snapshot);
+        goToPage(currentPage + 1);
+      }
     }
   };
 
@@ -331,15 +446,33 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
     if (!pdfDoc) return;
     if (viewMode === 'spread') {
       if (currentPage <= 3) {
+        const snapshot = captureCanvas(leftCanvasRef.current);
+        triggerFlipAnimation('prev', snapshot);
         goToPage(1);
       } else {
         const currentLeft = currentPage % 2 === 0 ? currentPage : currentPage - 1;
         const prevLeft = currentLeft - 2;
+        const snapshot = captureCanvas(leftCanvasRef.current);
+        triggerFlipAnimation('prev', snapshot);
         goToPage(Math.max(prevLeft, 1));
       }
     } else {
-      goToPage(Math.max(currentPage - 1, 1));
+      if (currentPage > 1) {
+        const snapshot = captureCanvas(singleCanvasRef.current);
+        triggerFlipAnimation('prev', snapshot);
+        goToPage(currentPage - 1);
+      }
     }
+  };
+
+  const handleThumbnailSelect = (targetPage: number) => {
+    if (targetPage === currentPage) return;
+    const direction = targetPage > currentPage ? 'next' : 'prev';
+    const snapshot = viewMode === 'spread'
+      ? (direction === 'next' ? captureCanvas(rightCanvasRef.current) : captureCanvas(leftCanvasRef.current))
+      : captureCanvas(singleCanvasRef.current);
+    triggerFlipAnimation(direction, snapshot);
+    goToPage(targetPage);
   };
 
   // Keyboard navigation
@@ -525,6 +658,21 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+          <div className="w-[1px] h-4 bg-cyan-900/80 mx-1" />
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+              soundEnabled
+                ? 'text-yellow-400 hover:text-yellow-300 hover:bg-[#0b244d]'
+                : 'text-cyan-500 hover:text-cyan-300 hover:bg-[#0b244d]'
+            }`}
+            title={soundEnabled ? 'Page Turn Sound: ON (Click to Mute)' : 'Page Turn Sound: OFF (Click to Enable)'}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span className="text-[10px] hidden md:inline font-mono">
+              {soundEnabled ? 'Audio' : 'Muted'}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -558,7 +706,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                 return (
                   <button
                     key={pNum}
-                    onClick={() => goToPage(pNum)}
+                    onClick={() => handleThumbnailSelect(pNum)}
                     className={`w-full text-left p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
                       isActive
                         ? 'bg-yellow-400/20 border-yellow-400 text-yellow-300 ring-1 ring-yellow-400'
@@ -629,13 +777,18 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                   style={{
                     transform: `scale(${zoomLevel / 100})`,
                     transformOrigin: 'center center',
+                    perspective: '2200px',
                   }}
                 >
                   {/* Album Cover Container with Realistic Hardcover Drop Shadow & Click-to-open */}
                   <div
                     onClick={handleNext}
-                    className="bg-white rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] border-2 border-yellow-400/50 overflow-hidden relative cursor-pointer group hover:ring-2 hover:ring-yellow-400 transition-all max-h-[calc(88vh-200px)] flex items-center justify-center"
-                    title="Click cover to open album (turn page)"
+                    className={`bg-white rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] border-2 border-yellow-400/50 overflow-hidden relative cursor-pointer group hover:ring-2 hover:ring-yellow-400 transition-all max-h-[calc(88vh-200px)] flex items-center justify-center ${
+                      isFlipping && flipDirection === 'next' ? 'animate-single-fold-forward' : ''
+                    } ${
+                      isFlipping && flipDirection === 'prev' ? 'animate-single-fold-backward' : ''
+                    }`}
+                    title={currentPage === 1 ? 'Click cover to open album (turn page)' : 'Click to turn forward'}
                   >
                     <canvas ref={singleCanvasRef} className="block max-h-[calc(88vh-210px)] w-auto max-w-full object-contain" />
                     {/* Hardcover album left spine shadow crease */}
@@ -646,7 +799,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                       <div className="px-4 py-2 rounded-xl bg-[#071630]/95 text-yellow-300 font-bold text-xs border border-yellow-400 flex items-center gap-2 shadow-2xl backdrop-blur-sm">
                         <BookOpen className="w-4 h-4" />
-                        <span>Click to Open Album Spread</span>
+                        <span>{currentPage === 1 ? 'Click to Open Album Spread' : 'Click to Turn Forward'}</span>
                         <ChevronRight className="w-4 h-4" />
                       </div>
                     </div>
@@ -654,7 +807,9 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
 
                   <div className="flex items-center gap-3 mt-4">
                     <span className="text-xs font-mono text-cyan-200 font-semibold px-3 py-1 rounded-lg bg-[#071630] border border-cyan-800 shadow">
-                      Page 1 of {totalPages} • Hardcover Album Front
+                      {currentPage === 1
+                        ? `Page 1 of ${totalPages} • Hardcover Album Front`
+                        : `Page ${currentPage} of ${totalPages}`}
                     </span>
                     {totalPages > 1 && (
                       <button
@@ -662,7 +817,7 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs shadow-lg shadow-yellow-400/30 cursor-pointer transition-all hover:scale-105 active:scale-95"
                       >
                         <BookOpen className="w-4 h-4" />
-                        <span>Open Album (Turn Page)</span>
+                        <span>{currentPage === 1 ? 'Open Album (Turn Page)' : 'Next Page'}</span>
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     )}
@@ -675,10 +830,14 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                   style={{
                     transform: `scale(${zoomLevel / 100})`,
                     transformOrigin: 'center center',
+                    perspective: '2400px',
                   }}
                 >
                   {/* The Realistic Open Album with Central Binding Gutter Crease & Authentic Page Shadows */}
-                  <div className="flex items-stretch justify-center shadow-[0_30px_80px_rgba(0,0,0,0.95)] rounded-2xl overflow-hidden border-2 border-cyan-700/60 bg-[#05142b] p-2 sm:p-3 relative max-w-[96vw] max-h-[calc(88vh-180px)]">
+                  <div
+                    className="flex items-stretch justify-center shadow-[0_30px_80px_rgba(0,0,0,0.95)] rounded-2xl overflow-hidden border-2 border-cyan-700/60 bg-[#05142b] p-2 sm:p-3 relative max-w-[96vw] max-h-[calc(88vh-180px)]"
+                    style={{ perspective: '2400px', transformStyle: 'preserve-3d' }}
+                  >
                     {/* Left Page (Even Page) - Click turns left/backward */}
                     <div
                       onClick={handlePrev}
@@ -696,6 +855,10 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg backdrop-blur-sm border border-yellow-400/40">
                         <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                       </div>
+                      {/* Dynamic shadow sweep on left page when turning forward */}
+                      {isFlipping && flipDirection === 'next' && (
+                        <div className="absolute inset-0 bg-gradient-to-l from-black/60 via-black/25 to-transparent pointer-events-none animate-shadow-sweep-left z-20" />
+                      )}
                     </div>
 
                     {/* Center Spine Divider crease */}
@@ -718,7 +881,89 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg backdrop-blur-sm border border-yellow-400/40">
                         <ChevronRight className="w-5 h-5 stroke-[2.5]" />
                       </div>
+                      {/* Dynamic shadow sweep on right page when turning backward */}
+                      {isFlipping && flipDirection === 'prev' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent pointer-events-none animate-shadow-sweep-right z-20" />
+                      )}
                     </div>
+
+                    {/* 3D Flipping Leaf (Forward Turn: Right Page Turns Left Over Spine) */}
+                    {isFlipping && flipDirection === 'next' && flipSnapshot && (
+                      <div
+                        className="absolute top-2 sm:top-3 bottom-2 sm:bottom-3 left-1/2 right-2 sm:right-3 pointer-events-none z-30 animate-book-flip-forward"
+                        style={{
+                          transformOrigin: 'left center',
+                          transformStyle: 'preserve-3d',
+                        }}
+                      >
+                        {/* Front Face: Snapshot of the page being turned */}
+                        <div
+                          className="absolute inset-0 bg-white flex items-center justify-center overflow-hidden shadow-2xl"
+                          style={{ backfaceVisibility: 'hidden' }}
+                        >
+                          <img
+                            src={flipSnapshot}
+                            alt="Flipping page"
+                            className="block max-h-[calc(88vh-205px)] w-auto max-w-full object-contain"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent pointer-events-none" />
+                        </div>
+
+                        {/* Back Face: Parchment reverse side as page flips over */}
+                        <div
+                          className="absolute inset-0 bg-[#fbf9f4] flex flex-col items-center justify-center overflow-hidden border border-amber-900/15 shadow-2xl"
+                          style={{
+                            backfaceVisibility: 'hidden',
+                            transform: 'rotateY(180deg)',
+                          }}
+                        >
+                          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-slate-400 opacity-50 select-none">
+                            <BookOpen className="w-12 h-12 mb-2 stroke-[1.2]" />
+                            <span className="text-[10px] font-serif tracking-widest uppercase">Bina Bangsa School Archives</span>
+                          </div>
+                          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/40 via-black/15 to-transparent pointer-events-none" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3D Flipping Leaf (Backward Turn: Left Page Turns Right Over Spine) */}
+                    {isFlipping && flipDirection === 'prev' && flipSnapshot && (
+                      <div
+                        className="absolute top-2 sm:top-3 bottom-2 sm:bottom-3 left-2 sm:left-3 right-1/2 pointer-events-none z-30 animate-book-flip-backward"
+                        style={{
+                          transformOrigin: 'right center',
+                          transformStyle: 'preserve-3d',
+                        }}
+                      >
+                        {/* Front Face */}
+                        <div
+                          className="absolute inset-0 bg-white flex items-center justify-center overflow-hidden shadow-2xl"
+                          style={{ backfaceVisibility: 'hidden' }}
+                        >
+                          <img
+                            src={flipSnapshot}
+                            alt="Flipping page"
+                            className="block max-h-[calc(88vh-205px)] w-auto max-w-full object-contain"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-black/10 to-transparent pointer-events-none" />
+                        </div>
+
+                        {/* Back Face */}
+                        <div
+                          className="absolute inset-0 bg-[#fbf9f4] flex flex-col items-center justify-center overflow-hidden border border-amber-900/15 shadow-2xl"
+                          style={{
+                            backfaceVisibility: 'hidden',
+                            transform: 'rotateY(180deg)',
+                          }}
+                        >
+                          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-slate-400 opacity-50 select-none">
+                            <BookOpen className="w-12 h-12 mb-2 stroke-[1.2]" />
+                            <span className="text-[10px] font-serif tracking-widest uppercase">Bina Bangsa School Archives</span>
+                          </div>
+                          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/40 via-black/15 to-transparent pointer-events-none" />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Album Spread Navigation & Page Indicator */}
