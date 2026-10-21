@@ -132,7 +132,12 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
   const [pageInputVal, setPageInputVal] = useState<string>(String(initialPage));
   const [zoomLevel, setZoomLevel] = useState<number>(100);
-  const [viewMode, setViewMode] = useState<'single' | 'spread'>('spread');
+  const [viewMode, setViewMode] = useState<'single' | 'spread'>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return 'single';
+    }
+    return 'spread';
+  });
   const [showThumbnails, setShowThumbnails] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -542,11 +547,12 @@ export const PdfPageViewer: React.FC<PdfPageViewerProps> = ({
             </button>
           </div>
 
-          {/* Status Source Badge */}
+          {/* Status Source Badge - visible across mobile, tablet, and desktop */}
           {sourceType === 'uploaded' && (
-            <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-bold">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] font-bold shrink-0">
               <Sparkles className="w-3 h-3 text-yellow-400" />
-              Uploaded PDF Active
+              <span className="hidden sm:inline">Uploaded PDF Active</span>
+              <span className="sm:hidden">Uploaded PDF</span>
             </span>
           )}
         </div>

@@ -61,10 +61,12 @@ export default function App() {
     };
 
     window.addEventListener('yearbooks_updated', handleYearbooksUpdated);
+    window.addEventListener('storage', handleYearbooksUpdated);
     window.addEventListener('admin_auth_changed', handleAuthChanged as EventListener);
 
     return () => {
       window.removeEventListener('yearbooks_updated', handleYearbooksUpdated);
+      window.removeEventListener('storage', handleYearbooksUpdated);
       window.removeEventListener('admin_auth_changed', handleAuthChanged as EventListener);
     };
   }, []);

@@ -137,8 +137,13 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
                   Landscape Album
                 </span>
               </h2>
-              <p className="text-xs text-cyan-200/80 hidden sm:block truncate">
-                Bina Bangsa School-Pantai Indah Kapuk • {yearbook.pageCount} Certified Pages • {yearbook.fileSize}
+              <p className="text-[11px] sm:text-xs text-cyan-200/80 truncate">
+                <span className="hidden sm:inline">BBS PIK • </span>
+                <span className="text-yellow-300 font-semibold">{yearbook.fileSize}</span>
+                <span> • {yearbook.pageCount} Pages</span>
+                {yearbook.fileName && (
+                  <span className="hidden md:inline text-cyan-400 font-mono"> • {yearbook.fileName}</span>
+                )}
               </p>
             </div>
           </div>
@@ -225,7 +230,8 @@ export const YearbookViewerModal: React.FC<YearbookViewerModalProps> = ({
                 title="Edit cover, academic year, title, overview and document info (Admin Mode)"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Edit Details</span>
+                <span className="hidden sm:inline">Edit Details</span>
+                <span className="sm:hidden">Edit</span>
               </button>
             )}
 

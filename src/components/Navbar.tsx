@@ -47,10 +47,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* School Name & Campus descriptor */}
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-base sm:text-lg lg:text-xl tracking-tight text-white group-hover:text-yellow-400 transition-colors">
-                  Bina Bangsa School-Pantai Indah Kapuk
+                <span className="font-serif font-bold text-sm sm:text-lg lg:text-xl tracking-tight text-white group-hover:text-yellow-400 transition-colors">
+                  <span className="hidden sm:inline">Bina Bangsa School-Pantai Indah Kapuk</span>
+                  <span className="sm:hidden">BBS Pantai Indah Kapuk</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-[#0a2347] text-cyan-300 border border-cyan-400/40 hidden sm:inline-block">
+                <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full bg-[#0a2347] text-cyan-300 border border-cyan-400/40 hidden md:inline-block">
                   BBS PIK
                 </span>
               </div>
@@ -61,25 +62,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Navigation Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Primary Main Page / Return to Main Page Button */}
             {currentView === 'admin' ? (
               <button
                 onClick={handleReturnToMain}
-                className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-[#071630] bg-yellow-400 hover:bg-yellow-300 rounded-xl shadow-lg shadow-yellow-400/20 border border-yellow-300 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-[#071630] bg-yellow-400 hover:bg-yellow-300 rounded-xl shadow-lg shadow-yellow-400/20 border border-yellow-300 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
                 title="Return to Main Page (Public Yearbook Gallery)"
               >
                 <Home className="w-4 h-4 shrink-0 stroke-[2.5]" />
-                <span>Return to Main Page</span>
+                <span className="hidden xs:inline">Return to Main Page</span>
+                <span className="xs:hidden">Main Page</span>
               </button>
             ) : (
               <button
                 onClick={handleReturnToMain}
-                className="inline-flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-[#0a244b] hover:bg-[#0e2f5c] border border-cyan-400/40 hover:border-yellow-400 rounded-xl transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-[#0a244b] hover:bg-[#0e2f5c] border border-cyan-400/40 hover:border-yellow-400 rounded-xl transition-all cursor-pointer shadow-sm"
                 title="Main Page (Public Yearbook Gallery)"
               >
                 <Home className="w-4 h-4 text-yellow-400 shrink-0" />
-                <span>Main Page</span>
+                <span className="hidden xs:inline">Main Page</span>
               </button>
             )}
 

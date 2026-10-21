@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Layers,
   FileCheck,
+  FileText,
   Edit3,
   Shield,
 } from 'lucide-react';
@@ -367,10 +368,32 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       ))}
                     </div>
                   )}
+
+                  {/* Uploaded File Specifications & Updates Badge (Guarantees immediate visibility on tablet & mobile) */}
+                  <div className="mt-3 p-2.5 rounded-xl bg-[#040e20] border border-cyan-900/80 text-[11px] text-cyan-200 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-mono gap-1">
+                      <span className="flex items-center gap-1.5 text-yellow-300 font-bold truncate">
+                        <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                        <span className="truncate" title={yearbook.fileName || `${yearbook.title}.pdf`}>
+                          {yearbook.fileName || `${yearbook.title}.pdf`}
+                        </span>
+                      </span>
+                      <span className="text-cyan-400 font-bold shrink-0">
+                        {yearbook.fileSize || 'Archived'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-cyan-300/75 pt-0.5 border-t border-cyan-950">
+                      <span>Updated {new Date(yearbook.dateUploaded).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        Certified PDF
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Card Action Buttons: Open Album and Download */}
-                <div className="mt-5 pt-4 border-t border-cyan-950/80 flex items-center gap-2">
+                <div className="mt-4 pt-3.5 border-t border-cyan-950/80 flex items-center gap-2">
                   {/* Primary Open Album Button in Dark Blue & Yellow */}
                   <button
                     onClick={() => onSelectYearbook(yearbook)}
@@ -390,7 +413,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     title={`Download full PDF archive (${yearbook.fileSize})`}
                   >
                     <Download className="w-3.5 h-3.5 text-yellow-400" />
-                    <span className="hidden xs:inline">PDF</span>
+                    <span>PDF</span>
                   </button>
 
                   {/* Edit Button - ONLY visible in Admin Log In Mode */}
@@ -404,7 +427,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       title="Edit cover, academic year, title, overview and document info (Admin Mode)"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Edit</span>
+                      <span>Edit</span>
                     </button>
                   )}
                 </div>

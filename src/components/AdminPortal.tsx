@@ -377,8 +377,116 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
         </div>
 
-        {/* Yearbooks Table */}
-        <div className="overflow-x-auto border border-cyan-900 rounded-xl">
+        {/* Responsive Mobile & Tablet Card View (guarantees uploaded files and updates are instantly visible) */}
+        <div className="md:hidden space-y-4">
+          {filteredList.map((item) => (
+            <div
+              key={item.id}
+              className="p-4 rounded-2xl bg-[#040e20] border border-cyan-800 shadow-lg space-y-3"
+            >
+              {/* Top row: Year & Milestone & Date */}
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-serif font-bold text-yellow-400 text-sm">
+                    {item.year}
+                  </span>
+                  {item.featured && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-400/20 text-yellow-300 font-sans border border-yellow-400/40 font-bold">
+                      Milestone
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] font-mono text-cyan-300">
+                  {new Date(item.dateUploaded).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+
+              {/* Middle row: Thumbnail + Title & Overview */}
+              <div className="flex items-start gap-3">
+                <div
+                  onClick={() => onPreviewYearbook(item)}
+                  className="w-16 h-22 rounded-lg overflow-hidden shadow-md border border-cyan-700/80 cursor-pointer bg-[#020b18] shrink-0"
+                >
+                  <img
+                    src={item.coverImageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4
+                    onClick={() => onPreviewYearbook(item)}
+                    className="font-bold text-white text-sm hover:text-yellow-400 transition-colors cursor-pointer line-clamp-1"
+                  >
+                    {item.title}
+                  </h4>
+                  <p className="text-cyan-200/80 text-xs line-clamp-2 mt-1 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Document Specifications Box (Directly displays uploaded file name, size, pages, and updates) */}
+              <div className="p-3 rounded-xl bg-[#071630] border border-cyan-900/80 text-xs space-y-1.5">
+                <div className="flex items-center justify-between font-mono text-[11px]">
+                  <span className="flex items-center gap-1.5 text-yellow-300 font-bold truncate">
+                    <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span className="truncate" title={item.fileName}>{item.fileName}</span>
+                  </span>
+                  <span className="text-cyan-300 font-bold shrink-0 ml-1">
+                    {item.fileSize}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-cyan-200/80 pt-1 border-t border-cyan-950">
+                  <span>{item.pageCount} certified pages</span>
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Uploaded Document
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Action Buttons with proper touch targets */}
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                <button
+                  onClick={() => onPreviewYearbook(item)}
+                  className="min-h-[42px] px-3 py-2 bg-[#0b244d] hover:bg-cyan-700 text-cyan-200 hover:text-white font-bold text-xs rounded-xl border border-cyan-700/60 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <ExternalLink className="w-4 h-4 text-cyan-300" />
+                  <span>Preview</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setYearbookToEdit(item);
+                    setIsModalOpen(true);
+                  }}
+                  className="min-h-[42px] px-3 py-2 bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  onClick={() => setYearbookToDelete(item)}
+                  className="min-h-[42px] px-3 py-2 bg-[#0b244d] hover:bg-rose-950 text-rose-300 hover:text-rose-200 font-bold text-xs rounded-xl border border-rose-500/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {filteredList.length === 0 && (
+            <div className="p-8 text-center text-cyan-300 bg-[#040e20] rounded-2xl border border-cyan-900">
+              No yearbook volumes found matching your query.
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Yearbooks Table (hidden on mobile/tablet) */}
+        <div className="hidden md:block overflow-x-auto border border-cyan-900 rounded-xl">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#030d1d] text-cyan-300 uppercase font-mono tracking-wider border-b border-cyan-900">
               <tr>
