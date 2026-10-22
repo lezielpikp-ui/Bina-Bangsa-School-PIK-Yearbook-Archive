@@ -10,6 +10,7 @@ import { AdminPortal } from './components/AdminPortal';
 import { YearbookViewerModal } from './components/YearbookViewerModal';
 import { SetupGuideModal } from './components/SetupGuideModal';
 import { AdminYearbookModal } from './components/AdminYearbookModal';
+import { DeviceSyncModal } from './components/DeviceSyncModal';
 import { Yearbook, AdminUser } from './types/yearbook';
 import {
   getAllYearbooks,
@@ -21,7 +22,7 @@ import {
   getActiveAdminSession,
   logoutAdmin,
 } from './services/authService';
-import { subscribeToSync, broadcastSync } from './services/syncService';
+import { subscribeToSync, broadcastSync, DeviceMode } from './services/syncService';
 import { CheckCircle2, Info, Shield } from 'lucide-react';
 import { BBSLogo } from './components/BBSLogo';
 
@@ -33,6 +34,8 @@ export default function App() {
   const [yearbookToEdit, setYearbookToEdit] = useState<Yearbook | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSetupGuideOpen, setIsSetupGuideOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [deviceMode, setDeviceMode] = useState<DeviceMode>('auto');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' } | null>(null);
 
   const handleOpenEdit = (yearbook: Yearbook) => {
@@ -67,6 +70,8 @@ export default function App() {
         setYearbooks(getAllYearbooks());
       } else if (event.type === 'AUTH_CHANGED') {
         setAdminUser(getActiveAdminSession());
+      } else if (event.type === 'DEVICE_MODE_CHANGED' && event.deviceMode) {
+        setDeviceMode(event.deviceMode);
       }
     });
 
@@ -81,6 +86,11 @@ export default function App() {
       window.removeEventListener('admin_auth_changed', handleAuthChanged as EventListener);
     };
   }, []);
+
+  const handleSelectDeviceMode = (mode: DeviceMode) => {
+    setDeviceMode(mode);
+    broadcastSync('DEVICE_MODE_CHANGED', { deviceMode: mode });
+  };
 
   // Save/Upload action
   const handleSaveYearbook = (data: Yearbook) => {
@@ -133,6 +143,7 @@ export default function App() {
         adminUser={adminUser}
         onLogout={handleLogout}
         onOpenSetupGuide={() => setIsSetupGuideOpen(true)}
+        onOpenSyncModal={() => setIsSyncModalOpen(true)}
       />
 
       {/* Main App Container */}
@@ -143,6 +154,9 @@ export default function App() {
             onSelectYearbook={(yb) => setSelectedYearbook(yb)}
             onEditYearbook={adminUser ? handleOpenEdit : undefined}
             adminUser={adminUser}
+            deviceMode={deviceMode}
+            onSelectDeviceMode={handleSelectDeviceMode}
+            onOpenSyncModal={() => setIsSyncModalOpen(true)}
           />
         ) : (
           <AdminPortal
@@ -192,6 +206,15 @@ export default function App() {
       <SetupGuideModal
         isOpen={isSetupGuideOpen}
         onClose={() => setIsSetupGuideOpen(false)}
+      />
+
+      {/* Modal: Multi-Device Sync & QR Code Transfer */}
+      <DeviceSyncModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        yearbooks={yearbooks}
+        deviceMode={deviceMode}
+        onSelectDeviceMode={handleSelectDeviceMode}
       />
 
       {/* Footer in BBS PIK Palette: Dark Blue, Yellow, White & Turquoise */}

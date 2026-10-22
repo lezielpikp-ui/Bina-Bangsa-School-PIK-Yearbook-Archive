@@ -34,6 +34,7 @@ import {
 import { AdminYearbookModal } from './AdminYearbookModal';
 import { AdminDeleteConfirmModal } from './AdminDeleteConfirmModal';
 import { BBSLogo } from './BBSLogo';
+import { generateCoverSvgDataUrl } from '../utils/coverGenerator';
 
 interface AdminPortalProps {
   adminUser: AdminUser | null;
@@ -408,9 +409,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   className="w-16 h-22 rounded-lg overflow-hidden shadow-md border border-cyan-700/80 cursor-pointer bg-[#020b18] shrink-0"
                 >
                   <img
-                    src={item.coverImageUrl}
+                    src={
+                      item.coverImageUrl?.includes('utf8,')
+                        ? generateCoverSvgDataUrl(item.year, item.title, 'darkBlue')
+                        : (item.coverImageUrl || generateCoverSvgDataUrl(item.year, item.title, 'darkBlue'))
+                    }
                     alt={item.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = generateCoverSvgDataUrl(item.year, item.title, 'darkBlue');
+                    }}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -508,9 +517,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       className="w-10 h-14 rounded overflow-hidden shadow border border-cyan-700 cursor-pointer bg-[#030d1d] hover:scale-105 transition-transform"
                     >
                       <img
-                        src={item.coverImageUrl}
+                        src={
+                          item.coverImageUrl?.includes('utf8,')
+                            ? generateCoverSvgDataUrl(item.year, item.title, 'darkBlue')
+                            : (item.coverImageUrl || generateCoverSvgDataUrl(item.year, item.title, 'darkBlue'))
+                        }
                         alt="Thumbnail"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = generateCoverSvgDataUrl(item.year, item.title, 'darkBlue');
+                        }}
                       />
                     </div>
                   </td>

@@ -226,7 +226,16 @@ export function generateCoverSvgDataUrl(
     </g>
   </svg>`;
 
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  try {
+    if (typeof window !== 'undefined' && typeof window.btoa === 'function') {
+      const base64 = window.btoa(unescape(encodeURIComponent(svg)));
+      return `data:image/svg+xml;base64,${base64}`;
+    }
+  } catch {
+    // Fallback if btoa fails
+  }
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 function escapeXml(unsafe: string): string {

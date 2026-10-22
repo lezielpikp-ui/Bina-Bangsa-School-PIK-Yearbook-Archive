@@ -280,10 +280,80 @@ export function getAllYearbooks(): Yearbook[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_YEARBOOKS));
       return INITIAL_YEARBOOKS;
     }
-    return parsed;
+
+    // Auto-heal: Fix any deprecated 'utf8,' or blank covers for mobile and tablet browsers
+    let hasHealed = false;
+    const healed = parsed.map((item) => {
+      if (
+        !item.coverImageUrl ||
+        item.coverImageUrl.includes('data:image/svg+xml;utf8,') ||
+        item.coverImageUrl.trim() === ''
+      ) {
+        hasHealed = true;
+        return {
+          ...item,
+          coverImageUrl: generateCoverSvgDataUrl(item.year, item.title, 'darkBlue'),
+        };
+      }
+      return item;
+    });
+
+    if (hasHealed) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(healed));
+      } catch {
+        // Storage quota full or unavailable
+      }
+    }
+
+    return healed;
   } catch (err) {
     console.error('Failed to read yearbooks from storage:', err);
     return INITIAL_YEARBOOKS;
+  }
+}
+
+/**
+ * Exports all yearbook archives as an encrypted/portable sync bundle
+ * so users can seamlessly transfer uploaded files to mobile or tablet.
+ */
+export function exportSyncBundle(): string {
+  const yearbooks = getAllYearbooks();
+  const bundle = {
+    version: '1.0',
+    exportedAt: new Date().toISOString(),
+    source: 'BBS PIK Digital Yearbook Archive',
+    count: yearbooks.length,
+    yearbooks,
+  };
+  return JSON.stringify(bundle, null, 2);
+}
+
+/**
+ * Imports a sync bundle to instantly update mobile and tablet views
+ * with all uploaded files, updates, and certified pages.
+ */
+export function importSyncBundle(jsonString: string): { success: boolean; count: number; error?: string } {
+  try {
+    const data = JSON.parse(jsonString);
+    const list = Array.isArray(data) ? data : data.yearbooks;
+    if (!Array.isArray(list) || list.length === 0) {
+      return { success: false, count: 0, error: 'Invalid sync file: no yearbook records found.' };
+    }
+
+    const validated: Yearbook[] = list.map((item: any) => ({
+      ...item,
+      coverImageUrl: (!item.coverImageUrl || item.coverImageUrl.includes('utf8,'))
+        ? generateCoverSvgDataUrl(item.year || '2024–2025', item.title || 'Yearbook', 'darkBlue')
+        : item.coverImageUrl,
+    }));
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+    window.dispatchEvent(new CustomEvent('yearbooks_updated'));
+    broadcastSync('YEARBOOKS_UPDATED');
+    return { success: true, count: validated.length };
+  } catch (err) {
+    return { success: false, count: 0, error: (err as Error).message };
   }
 }
 

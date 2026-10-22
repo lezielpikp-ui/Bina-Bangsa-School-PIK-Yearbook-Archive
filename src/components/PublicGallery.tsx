@@ -18,16 +18,25 @@ import {
   FileText,
   Edit3,
   Shield,
+  Smartphone,
+  Tablet,
+  Laptop,
+  Share2,
 } from 'lucide-react';
 import { Yearbook, SortOption, AdminUser } from '../types/yearbook';
 import { downloadYearbookFile } from '../utils/pdfHelper';
 import { BBSLogo } from './BBSLogo';
+import { generateCoverSvgDataUrl } from '../utils/coverGenerator';
+import { DeviceMode } from '../services/syncService';
 
 interface PublicGalleryProps {
   yearbooks: Yearbook[];
   onSelectYearbook: (yearbook: Yearbook) => void;
   onEditYearbook?: (yearbook: Yearbook) => void;
   adminUser?: AdminUser | null;
+  deviceMode?: DeviceMode;
+  onSelectDeviceMode?: (mode: DeviceMode) => void;
+  onOpenSyncModal?: () => void;
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({
@@ -35,6 +44,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   onSelectYearbook,
   onEditYearbook,
   adminUser,
+  deviceMode = 'auto',
+  onSelectDeviceMode,
+  onOpenSyncModal,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDecade, setSelectedDecade] = useState<string>('all');
@@ -271,171 +283,282 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         )}
       </section>
 
-      {/* Yearbook Landscape Albums Grid */}
-      {filteredYearbooks.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7 sm:gap-8">
-          {filteredYearbooks.map((yearbook) => (
-            <article
-              key={yearbook.id}
-              className="group bg-[#071936] rounded-2xl border border-cyan-900/80 hover:border-cyan-400/80 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/15 transition-all duration-300 flex flex-col overflow-hidden"
+      {/* Device Viewport Selector & Cross-Device Sync Status Bar */}
+      <section className="bg-[#071936]/70 border border-cyan-500/25 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-md backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-cyan-200 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Device Mode & Sync:
+          </span>
+          <div className="flex items-center bg-[#030d1d] p-0.5 rounded-xl border border-cyan-900 text-xs">
+            <button
+              onClick={() => onSelectDeviceMode && onSelectDeviceMode('auto')}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                deviceMode === 'auto'
+                  ? 'bg-yellow-400 text-[#071630] font-extrabold shadow'
+                  : 'text-cyan-200 hover:text-white'
+              }`}
+              title="Responsive layout adapting to browser width"
             >
-              {/* Landscape Hardcover Album Presentation */}
-              <div
-                onClick={() => onSelectYearbook(yearbook)}
-                className="relative aspect-[16/10] w-full bg-[#020b18] overflow-hidden cursor-pointer p-3 sm:p-4 flex items-center justify-center group-hover:bg-[#031124] transition-colors"
-              >
-                {/* 3D Landscape Hardcover Album Container */}
-                <div className="relative w-full h-full rounded-xl shadow-2xl overflow-hidden ring-1 ring-cyan-500/30 group-hover:ring-yellow-400/70 transition-all bg-[#040f22] flex items-center justify-center">
-                  <img
-                    src={yearbook.coverImageUrl}
-                    alt={`${yearbook.year} - ${yearbook.title} Album Cover`}
-                    className="w-full h-full object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-500"
-                    loading="lazy"
-                  />
-
-                  {/* Left Spine Binding Bar (Authentic Album Hardcover Look) */}
-                  <div className="absolute left-0 top-0 bottom-0 w-4 sm:w-5 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none flex flex-col justify-around items-center py-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
-                  </div>
-
-                  {/* Gilded Page Edges along Right Side */}
-                  <div className="absolute right-0 top-1 bottom-1 w-1.5 bg-gradient-to-l from-yellow-400/60 to-transparent rounded-r pointer-events-none" />
-
-                  {/* Foil Sheen Highlight overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-cyan-300/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-                  {/* Academic Year Plaque */}
-                  <div className="absolute top-2.5 right-2.5 bg-[#071630]/95 backdrop-blur-md border border-yellow-400/80 text-yellow-300 font-serif font-extrabold text-xs px-2.5 py-1 rounded-lg shadow-lg flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-yellow-400" />
-                    <span>{yearbook.year}</span>
-                  </div>
-
-                  {/* Landscape Album Format Badge */}
-                  <div className="absolute bottom-2.5 left-6 bg-[#071630]/90 backdrop-blur-md border border-cyan-500/50 text-cyan-200 text-[10px] font-bold px-2 py-0.5 rounded-md shadow flex items-center gap-1">
-                    <BookOpen className="w-3 h-3 text-cyan-400" />
-                    <span>Landscape Album</span>
-                  </div>
-
-                  {/* Milestone ribbon if applicable */}
-                  {yearbook.featured && (
-                    <div className="absolute top-2.5 left-6 bg-yellow-400 text-[#071630] font-extrabold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shadow-md">
-                      Milestone
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Information & Metadata Body */}
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  {/* Academic Year Header */}
-                  <div className="flex items-center justify-between text-xs text-cyan-200/80 mb-1.5">
-                    <span className="flex items-center gap-1 font-bold text-yellow-400">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Academic Year {yearbook.year}
-                    </span>
-                    <span className="font-mono text-[11px] text-cyan-300/90 font-semibold">
-                      {yearbook.pageCount} certified pages
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3
-                    onClick={() => onSelectYearbook(yearbook)}
-                    className="font-serif text-lg sm:text-xl font-bold text-white hover:text-yellow-400 transition-colors cursor-pointer line-clamp-1"
-                    title={yearbook.title}
-                  >
-                    {yearbook.title}
-                  </h3>
-
-                  {/* Short Description */}
-                  <p className="mt-2 text-xs text-cyan-100/75 line-clamp-2 leading-relaxed">
-                    {yearbook.description}
-                  </p>
-
-                  {/* Tags in Turquoise & Dark Blue */}
-                  {yearbook.tags && yearbook.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {yearbook.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0d2a54] text-cyan-300 border border-cyan-600/40"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Uploaded File Specifications & Updates Badge (Guarantees immediate visibility on tablet & mobile) */}
-                  <div className="mt-3 p-2.5 rounded-xl bg-[#040e20] border border-cyan-900/80 text-[11px] text-cyan-200 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-mono gap-1">
-                      <span className="flex items-center gap-1.5 text-yellow-300 font-bold truncate">
-                        <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span className="truncate" title={yearbook.fileName || `${yearbook.title}.pdf`}>
-                          {yearbook.fileName || `${yearbook.title}.pdf`}
-                        </span>
-                      </span>
-                      <span className="text-cyan-400 font-bold shrink-0">
-                        {yearbook.fileSize || 'Archived'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-cyan-300/75 pt-0.5 border-t border-cyan-950">
-                      <span>Updated {new Date(yearbook.dateUploaded).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                      <span className="text-emerald-400 font-bold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        Certified PDF
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Action Buttons: Open Album and Download */}
-                <div className="mt-4 pt-3.5 border-t border-cyan-950/80 flex items-center gap-2">
-                  {/* Primary Open Album Button in Dark Blue & Yellow */}
-                  <button
-                    onClick={() => onSelectYearbook(yearbook)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-yellow-400/15 border border-yellow-300 transition-all cursor-pointer group-hover:scale-[1.01]"
-                  >
-                    <BookOpen className="w-4 h-4 stroke-[2.4]" />
-                    <span>Open Album</span>
-                  </button>
-
-                  {/* Direct Download Button in Dark Blue/Cyan */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      downloadYearbookFile(yearbook);
-                    }}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#0b244d] hover:bg-[#0f2f63] text-cyan-200 hover:text-white font-bold text-xs rounded-xl border border-cyan-600/50 transition-all cursor-pointer"
-                    title={`Download full PDF archive (${yearbook.fileSize})`}
-                  >
-                    <Download className="w-3.5 h-3.5 text-yellow-400" />
-                    <span>PDF</span>
-                  </button>
-
-                  {/* Edit Button - ONLY visible in Admin Log In Mode */}
-                  {adminUser && onEditYearbook && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditYearbook(yearbook);
-                      }}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-cyan-950 hover:bg-yellow-400 hover:text-[#071630] text-yellow-300 font-bold text-xs rounded-xl border border-yellow-400/60 shadow-sm transition-all cursor-pointer"
-                      title="Edit cover, academic year, title, overview and document info (Admin Mode)"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Edit</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
+              <RotateCcw className="w-3 h-3" />
+              <span>Auto</span>
+            </button>
+            <button
+              onClick={() => onSelectDeviceMode && onSelectDeviceMode('laptop')}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                deviceMode === 'laptop'
+                  ? 'bg-yellow-400 text-[#071630] font-extrabold shadow'
+                  : 'text-cyan-200 hover:text-white'
+              }`}
+              title="Wide Desktop / Laptop layout"
+            >
+              <Laptop className="w-3 h-3" />
+              <span>Laptop</span>
+            </button>
+            <button
+              onClick={() => onSelectDeviceMode && onSelectDeviceMode('tablet')}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                deviceMode === 'tablet'
+                  ? 'bg-yellow-400 text-[#071630] font-extrabold shadow'
+                  : 'text-cyan-200 hover:text-white'
+              }`}
+              title="Medium Tablet (iPad / Android Tablet) layout"
+            >
+              <Tablet className="w-3 h-3" />
+              <span>Tablet</span>
+            </button>
+            <button
+              onClick={() => onSelectDeviceMode && onSelectDeviceMode('mobile')}
+              className={`px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 ${
+                deviceMode === 'mobile'
+                  ? 'bg-yellow-400 text-[#071630] font-extrabold shadow'
+                  : 'text-cyan-200 hover:text-white'
+              }`}
+              title="Compact Mobile Phone layout"
+            >
+              <Smartphone className="w-3 h-3" />
+              <span>Mobile</span>
+            </button>
+          </div>
         </div>
-      ) : (
+
+        {/* Sync Across Devices Modal Button */}
+        {onOpenSyncModal && (
+          <button
+            onClick={onOpenSyncModal}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0b244d] hover:bg-cyan-700 text-yellow-300 hover:text-yellow-200 font-bold text-xs rounded-xl border border-yellow-400/50 shadow-sm transition-all cursor-pointer"
+            title="Open Mobile/Tablet QR Sync & Export/Import Bundle"
+          >
+            <Share2 className="w-3.5 h-3.5 text-yellow-400" />
+            <span>Sync Mobile / Tablet</span>
+          </button>
+        )}
+      </section>
+
+      {/* Device Viewport Wrapper (renders simulated container if tablet/mobile mode is forced) */}
+      <div
+        className={
+          deviceMode === 'mobile'
+            ? 'max-w-[420px] mx-auto transition-all duration-300 ring-2 ring-cyan-500/40 rounded-3xl p-3 sm:p-4 bg-[#030d1d] shadow-2xl shadow-cyan-950/80 space-y-4'
+            : deviceMode === 'tablet'
+            ? 'max-w-[768px] mx-auto transition-all duration-300 ring-2 ring-cyan-500/30 rounded-3xl p-4 sm:p-6 bg-[#041126] shadow-2xl shadow-cyan-950/80 space-y-6'
+            : 'w-full'
+        }
+      >
+        {deviceMode !== 'auto' && (
+          <div className="flex items-center justify-between text-xs px-2 py-1 bg-[#020b18] rounded-xl border border-cyan-900 text-cyan-300 font-mono">
+            <span className="flex items-center gap-1.5">
+              {deviceMode === 'mobile' ? <Smartphone className="w-3.5 h-3.5 text-yellow-400" /> : <Tablet className="w-3.5 h-3.5 text-yellow-400" />}
+              <span>{deviceMode === 'mobile' ? 'Mobile Viewport (390px)' : 'Tablet Viewport (768px)'}</span>
+            </span>
+            <span className="text-emerald-400 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Auto-Synced
+            </span>
+          </div>
+        )}
+
+        {/* Yearbook Landscape Albums Grid */}
+        {filteredYearbooks.length > 0 ? (
+          <div
+            className={`grid gap-6 sm:gap-8 ${
+              deviceMode === 'mobile'
+                ? 'grid-cols-1'
+                : deviceMode === 'tablet'
+                ? 'grid-cols-1 sm:grid-cols-2'
+                : 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+            }`}
+          >
+            {filteredYearbooks.map((yearbook) => {
+              const safeCoverUrl =
+                yearbook.coverImageUrl?.includes('utf8,') || !yearbook.coverImageUrl
+                  ? generateCoverSvgDataUrl(yearbook.year, yearbook.title, 'darkBlue')
+                  : yearbook.coverImageUrl;
+
+              return (
+                <article
+                  key={yearbook.id}
+                  className="group bg-[#071936] rounded-2xl border border-cyan-900/80 hover:border-cyan-400/80 shadow-xl hover:shadow-2xl hover:shadow-cyan-500/15 transition-all duration-300 flex flex-col overflow-hidden"
+                >
+                  {/* Landscape Hardcover Album Presentation */}
+                  <div
+                    onClick={() => onSelectYearbook(yearbook)}
+                    className="relative aspect-[16/10] w-full bg-[#020b18] overflow-hidden cursor-pointer p-3 sm:p-4 flex items-center justify-center group-hover:bg-[#031124] transition-colors"
+                  >
+                    {/* 3D Landscape Hardcover Album Container */}
+                    <div className="relative w-full h-full rounded-xl shadow-2xl overflow-hidden ring-1 ring-cyan-500/30 group-hover:ring-yellow-400/70 transition-all bg-[#040f22] flex items-center justify-center">
+                      <img
+                        src={safeCoverUrl}
+                        alt={`${yearbook.year} - ${yearbook.title} Album Cover`}
+                        className="w-full h-full object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = generateCoverSvgDataUrl(yearbook.year, yearbook.title, 'darkBlue');
+                        }}
+                      />
+
+                      {/* Left Spine Binding Bar (Authentic Album Hardcover Look) */}
+                      <div className="absolute left-0 top-0 bottom-0 w-4 sm:w-5 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none flex flex-col justify-around items-center py-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400/80 shadow-sm" />
+                      </div>
+
+                      {/* Gilded Page Edges along Right Side */}
+                      <div className="absolute right-0 top-1 bottom-1 w-1.5 bg-gradient-to-l from-yellow-400/60 to-transparent rounded-r pointer-events-none" />
+
+                      {/* Foil Sheen Highlight overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-cyan-300/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                      {/* Academic Year Plaque */}
+                      <div className="absolute top-2.5 right-2.5 bg-[#071630]/95 backdrop-blur-md border border-yellow-400/80 text-yellow-300 font-serif font-extrabold text-xs px-2.5 py-1 rounded-lg shadow-lg flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3 text-yellow-400" />
+                        <span>{yearbook.year}</span>
+                      </div>
+
+                      {/* Landscape Album Format Badge */}
+                      <div className="absolute bottom-2.5 left-6 bg-[#071630]/90 backdrop-blur-md border border-cyan-500/50 text-cyan-200 text-[10px] font-bold px-2 py-0.5 rounded-md shadow flex items-center gap-1">
+                        <BookOpen className="w-3 h-3 text-cyan-400" />
+                        <span>Landscape Album</span>
+                      </div>
+
+                      {/* Milestone ribbon if applicable */}
+                      {yearbook.featured && (
+                        <div className="absolute top-2.5 left-6 bg-yellow-400 text-[#071630] font-extrabold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded shadow-md">
+                          Milestone
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Information & Metadata Body */}
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      {/* Academic Year Header */}
+                      <div className="flex items-center justify-between text-xs text-cyan-200/80 mb-1">
+                        <span className="flex items-center gap-1 font-bold text-yellow-400">
+                          <Calendar className="w-3.5 h-3.5" />
+                          Academic Year {yearbook.year}
+                        </span>
+                        <span className="font-mono text-[11px] text-cyan-300/90 font-semibold">
+                          {yearbook.pageCount} certified pages
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h3
+                        onClick={() => onSelectYearbook(yearbook)}
+                        className="font-serif text-lg sm:text-xl font-bold text-white hover:text-yellow-400 transition-colors cursor-pointer line-clamp-1"
+                        title={yearbook.title}
+                      >
+                        {yearbook.title}
+                      </h3>
+
+                      {/* UPLOADED FILE SPECIFICATIONS & CERTIFICATION BADGE (Prominently displayed right under title for instant visibility on mobile & tablet) */}
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-[#040e20] border border-cyan-900/80 text-[11px] text-cyan-200 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-mono gap-1">
+                          <span className="flex items-center gap-1.5 text-yellow-300 font-bold truncate">
+                            <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            <span className="truncate" title={yearbook.fileName || `${yearbook.title}.pdf`}>
+                              {yearbook.fileName || `${yearbook.title}.pdf`}
+                            </span>
+                          </span>
+                          <span className="text-cyan-300 font-bold shrink-0">
+                            {yearbook.fileSize || 'Archived'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-cyan-300/75 pt-1 border-t border-cyan-950">
+                          <span>Updated {new Date(yearbook.dateUploaded).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            Certified PDF
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Action Buttons: Open Album and Download (Immediately visible without scrolling on mobile) */}
+                    <div className="pt-2 border-t border-cyan-950/80 flex items-center gap-2">
+                      <button
+                        onClick={() => onSelectYearbook(yearbook)}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-[#071630] font-extrabold text-xs sm:text-sm rounded-xl shadow-md shadow-yellow-400/15 border border-yellow-300 transition-all cursor-pointer group-hover:scale-[1.01]"
+                      >
+                        <BookOpen className="w-4 h-4 stroke-[2.4]" />
+                        <span>Open Album</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadYearbookFile(yearbook);
+                        }}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#0b244d] hover:bg-[#0f2f63] text-cyan-200 hover:text-white font-bold text-xs rounded-xl border border-cyan-600/50 transition-all cursor-pointer"
+                        title={`Download full PDF archive (${yearbook.fileSize})`}
+                      >
+                        <Download className="w-3.5 h-3.5 text-yellow-400" />
+                        <span>PDF</span>
+                      </button>
+
+                      {adminUser && onEditYearbook && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditYearbook(yearbook);
+                          }}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-cyan-950 hover:bg-yellow-400 hover:text-[#071630] text-yellow-300 font-bold text-xs rounded-xl border border-yellow-400/60 shadow-sm transition-all cursor-pointer"
+                          title="Edit details (Admin Mode)"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Short Description & Tags (Cleanly clamped at bottom of card) */}
+                    <div className="pt-1">
+                      <p className="text-xs text-cyan-100/75 line-clamp-2 leading-relaxed">
+                        {yearbook.description}
+                      </p>
+
+                      {yearbook.tags && yearbook.tags.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1.5">
+                          {yearbook.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0d2a54] text-cyan-300 border border-cyan-600/40"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
         /* Empty Search Result State */
         <div className="text-center py-16 px-4 bg-[#071936]/80 rounded-3xl border border-dashed border-cyan-900">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex items-center justify-center mb-4">
@@ -457,6 +580,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 };

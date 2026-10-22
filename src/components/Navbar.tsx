@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { BookOpen, ShieldCheck, Lock, LogOut, HelpCircle, Home } from 'lucide-react';
+import { BookOpen, ShieldCheck, Lock, LogOut, HelpCircle, Home, Share2 } from 'lucide-react';
 import { AdminUser } from '../types/yearbook';
 import { BBSLogo } from './BBSLogo';
 
@@ -14,6 +14,7 @@ interface NavbarProps {
   adminUser: AdminUser | null;
   onLogout: () => void;
   onOpenSetupGuide: () => void;
+  onOpenSyncModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,6 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   adminUser,
   onLogout,
   onOpenSetupGuide,
+  onOpenSyncModal,
 }) => {
 
   const handleReturnToMain = () => {
@@ -85,6 +87,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
+            {/* Sync Mobile/Tablet Devices Button */}
+            {onOpenSyncModal && (
+              <button
+                onClick={onOpenSyncModal}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-yellow-300 hover:text-yellow-200 bg-[#0a2347] hover:bg-[#0e2f5c] border border-yellow-400/50 hover:border-yellow-400 rounded-xl transition-all cursor-pointer shadow-sm"
+                title="Sync and view archives across Laptop, Tablet, and Mobile"
+              >
+                <Share2 className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="hidden sm:inline">Sync Devices</span>
+                <span className="sm:hidden">Sync</span>
+              </button>
+            )}
+
             {/* Setup & Deployment Guide Button */}
             <button
               onClick={onOpenSetupGuide}
@@ -92,7 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="View Setup & Deployment Instructions"
             >
               <HelpCircle className="w-4 h-4 text-cyan-300" />
-              <span className="hidden sm:inline">Setup Guide</span>
+              <span className="hidden md:inline">Setup Guide</span>
             </button>
 
             {/* Admin Access Button / Profile Indicator */}
