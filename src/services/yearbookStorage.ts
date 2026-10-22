@@ -6,6 +6,7 @@
 import { Yearbook } from '../types/yearbook';
 import { generateCoverSvgDataUrl } from '../utils/coverGenerator';
 import { deletePdfFile } from './pdfStore';
+import { broadcastSync } from './syncService';
 
 const STORAGE_KEY = 'bbs_pik_yearbook_gallery_records_v4';
 
@@ -314,12 +315,14 @@ export function saveYearbook(yearbook: Yearbook): Yearbook[] {
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitizedList));
     window.dispatchEvent(new CustomEvent('yearbooks_updated'));
+    broadcastSync('YEARBOOKS_UPDATED');
   } catch (err) {
     console.error('Storage write error, attempting stripped fallback:', err);
     try {
       const strippedList = updatedList.map((item) => ({ ...item, fileUrl: '' }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(strippedList));
       window.dispatchEvent(new CustomEvent('yearbooks_updated'));
+      broadcastSync('YEARBOOKS_UPDATED');
     } catch {
       throw new Error('Storage write failed. Please ensure browser storage quota is available.');
     }
@@ -337,6 +340,7 @@ export function deleteYearbook(id: string): Yearbook[] {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
   deletePdfFile(id).catch(() => {});
   window.dispatchEvent(new CustomEvent('yearbooks_updated'));
+  broadcastSync('YEARBOOKS_UPDATED');
   return filtered;
 }
 
@@ -346,5 +350,6 @@ export function deleteYearbook(id: string): Yearbook[] {
 export function resetYearbooks(): Yearbook[] {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_YEARBOOKS));
   window.dispatchEvent(new CustomEvent('yearbooks_updated'));
+  broadcastSync('YEARBOOKS_UPDATED');
   return INITIAL_YEARBOOKS;
 }

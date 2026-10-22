@@ -21,6 +21,7 @@ import {
   getActiveAdminSession,
   logoutAdmin,
 } from './services/authService';
+import { subscribeToSync, broadcastSync } from './services/syncService';
 import { CheckCircle2, Info, Shield } from 'lucide-react';
 import { BBSLogo } from './components/BBSLogo';
 
@@ -58,13 +59,23 @@ export default function App() {
 
     const handleAuthChanged = (e: CustomEvent<{ user: AdminUser | null }>) => {
       setAdminUser(e.detail.user);
+      broadcastSync('AUTH_CHANGED');
     };
+
+    const unsubscribeSync = subscribeToSync((event) => {
+      if (event.type === 'YEARBOOKS_UPDATED') {
+        setYearbooks(getAllYearbooks());
+      } else if (event.type === 'AUTH_CHANGED') {
+        setAdminUser(getActiveAdminSession());
+      }
+    });
 
     window.addEventListener('yearbooks_updated', handleYearbooksUpdated);
     window.addEventListener('storage', handleYearbooksUpdated);
     window.addEventListener('admin_auth_changed', handleAuthChanged as EventListener);
 
     return () => {
+      unsubscribeSync();
       window.removeEventListener('yearbooks_updated', handleYearbooksUpdated);
       window.removeEventListener('storage', handleYearbooksUpdated);
       window.removeEventListener('admin_auth_changed', handleAuthChanged as EventListener);
